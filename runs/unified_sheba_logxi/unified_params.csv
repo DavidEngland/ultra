@@ -1,0 +1,2 @@
+dataset,b_u,lambda_u,beta_c1,a_s,b_s,a_xi,zeta0,lambda_star,ridge,n_ultra,regime,blend,c1_tie,xi_mode
+SHEBA,16.0,4.0,4.0,4.0,1.4271112466347595,0.3,NaN,0.25,0.05,2,stable,soft,true,log

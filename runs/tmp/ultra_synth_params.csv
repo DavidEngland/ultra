@@ -1,0 +1,2 @@
+dataset,a,b,lambda_profile,alpha_xi,lambda_star,ridge,n_ultra,regime,split_mode,baseline_mode,xi_mode,a_true,b_true,lambda_profile_true,alpha_xi_true,lambda_star_true,n_ultra_true,noise_sigma,noise_frac
+synthetic,1.0,4.7,-1.0,1.2751110483723245,0.25,0.0001,6,all,blocked,dyer47,tanh,1.0,0.35,4.0,0.9,0.5,4,0.001848267975975204,0.08
