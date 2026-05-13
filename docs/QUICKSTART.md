@@ -1,75 +1,87 @@
 # Quickstart
 
+This quickstart is focused on running [src/julia/DCT_SMEAR.jl](src/julia/DCT_SMEAR.jl) and the other main Julia entry scripts in this repository.
+
 ## 1) Requirements
 
 - Julia 1.9+
-- Packages: CSV, DataFrames, LsqFit, LinearAlgebra, Statistics, Random
-- Optional plotting: CairoMakie
+- Internet access for SmartSMEAR API-based runs
 
-Install packages:
-
-```bash
-julia -e 'using Pkg; Pkg.add(["CSV","DataFrames","LsqFit","LinearAlgebra","Statistics","Random","Dates","Downloads"])'
-julia -e 'using Pkg; Pkg.add("CairoMakie")'
-```
-
-## 2) Synthetic smoke test
+From repository root:
 
 ```bash
-julia src/julia/ultraspherical_practical_run.jl --synthetic runs/tmp/ultra_synth 0.08 320
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
 ```
+
+## 2) DCT_SMEAR Fast Run
+
+Run:
+
+```bash
+julia --project=. -e 'include("src/julia/DCT_SMEAR.jl")'
+```
+
+Primary outputs are written under:
+
+- [runs/dct_smear_20250501_20250601](runs/dct_smear_20250501_20250601)
 
 Expected files include:
-- runs/tmp/ultra_synth_metrics.csv
-- runs/tmp/ultra_synth_params.csv
-- runs/tmp/ultra_synth_coeffs.csv
 
-## 3) SHEBA workflow
+- [runs/dct_smear_20250501_20250601/fingerprints.csv](runs/dct_smear_20250501_20250601/fingerprints.csv)
+- [runs/dct_smear_20250501_20250601/stable_events.csv](runs/dct_smear_20250501_20250601/stable_events.csv)
+- [runs/dct_smear_20250501_20250601/stability_counts.csv](runs/dct_smear_20250501_20250601/stability_counts.csv)
+- [runs/dct_smear_20250501_20250601/diagnostics_summary.csv](runs/dct_smear_20250501_20250601/diagnostics_summary.csv)
+- [runs/dct_smear_20250501_20250601/report.md](runs/dct_smear_20250501_20250601/report.md)
 
-Preprocess (uses retained raw file or downloads if omitted):
+## 3) Metadata Lookup Helpers For SMEAR Scripting
 
-```bash
-julia src/julia/preprocess_sheba_main.jl runs/sheba/input/sheba_input.csv data/sheba/raw/main_file6_hd.txt
-```
+Generated compact lookup files:
 
-Profile-rich SHEBA source (already retained from NCAR order):
+- [data/smear/vars_compact_lookup.json](data/smear/vars_compact_lookup.json)
+- [data/smear/varrio_dct_subset.json](data/smear/varrio_dct_subset.json)
 
-- data/sheba/raw/ncar_eol_dee002994255/prof_file_all6_ed_hd.txt
+Julia helper module:
 
-Use this file for future multi-level gradient preprocessing and HSNBL sensitivity tests.
+- [src/julia/SMEARVarLookup.jl](src/julia/SMEARVarLookup.jl)
 
-NCAR download policy reminder:
-
-- Download one file at a time (sequential) for NCAR order links.
-
-Fit with Grachev baseline:
+Smoke test:
 
 ```bash
-julia src/julia/sheba_ultra.jl runs/sheba/input/sheba_input.csv runs/sheba/fit/sheba_ultra_grachev SHEBA --baseline=grachev
+julia --project=. -e 'include("src/julia/SMEARVarLookup.jl"); using .SMEARVarLookup; println(length(varrio_dct_vars(:temperature_profile))); println(station_categories(1))'
 ```
 
-Fit with zero baseline (ultraspherical only):
+## 4) Other Common Entry Scripts
+
+SHEBA preprocess:
 
 ```bash
-julia src/julia/sheba_ultra.jl runs/sheba/input/sheba_input.csv runs/sheba/fit/sheba_ultra_zero SHEBA --baseline=zero
+julia --project=. src/julia/preprocess_sheba_main.jl runs/sheba/input/sheba_input.csv data/sheba/raw/main_file6_hd.txt
 ```
 
-## 4) SMEAR workflow (template)
-
-Preprocess via API/local tower:
+SHEBA fit (Grachev baseline):
 
 ```bash
-julia src/julia/preprocess_tower_to_ultra_input.jl HYY runs/smear/input/hyy_input.csv 24.0 0.0 --mode=api-smear --profile-mode=two-level --from=2018-01-01T00:00:00 --to=2018-02-01T00:00:00 --interval=30 --aggregation=ARITHMETIC --quality=ANY --tv-uw=HYY_EDDY233.uw --tv-vw=HYY_EDDY233.vw --tv-wthetav=HYY_EDDY233.wtheta_v --tv-thetav=HYY_EDDY233.theta_v --tv-u1=HYY_META.WSU168 --tv-u2=HYY_EDDY233.U --tv-theta1=HYY_META.T168 --tv-theta2=HYY_EDDY233.av_t --z1=16.8 --z2=24.0 --phi=phi_m --stable-only
+julia --project=. src/julia/sheba_ultra.jl runs/sheba/input/sheba_input.csv runs/sheba/fit/sheba_ultra_grachev SHEBA --baseline=grachev
 ```
 
-Fit:
+Synthetic ultraspherical smoke test:
 
 ```bash
-julia src/julia/ultraspherical_practical_run.jl runs/smear/input/hyy_input.csv runs/smear/fit/hyy_ultra
+julia --project=. src/julia/ultraspherical_practical_run.jl --synthetic runs/tmp/ultra_synth 0.08 320
 ```
 
-## 5) Validation
+SMEAR preprocessing template:
 
-- Compare RMSE in metrics files (baseline vs baseline+ULTRA)
-- Review report markdown in the same output prefix
-- Optionally inspect generated PNG comparison plots
+```bash
+julia --project=. src/julia/preprocess_tower_to_ultra_input.jl HYY runs/smear/input/hyy_input.csv 24.0 0.0 --mode=api-smear --profile-mode=two-level --from=2018-01-01T00:00:00 --to=2018-02-01T00:00:00 --interval=30 --aggregation=ARITHMETIC --quality=ANY --tv-uw=HYY_EDDY233.uw --tv-vw=HYY_EDDY233.vw --tv-wthetav=HYY_EDDY233.wtheta_v --tv-thetav=HYY_EDDY233.theta_v --tv-u1=HYY_META.WSU168 --tv-u2=HYY_EDDY233.U --tv-theta1=HYY_META.T168 --tv-theta2=HYY_EDDY233.av_t --z1=16.8 --z2=24.0 --phi=phi_m --stable-only
+```
+
+## 5) Troubleshooting
+
+- If you get SmartSMEAR 400 variable errors, verify tablevariable names in [data/smear/vars.json](data/smear/vars.json).
+- For Varrio-specific scripting, use [data/smear/varrio_dct_subset.json](data/smear/varrio_dct_subset.json) and [src/julia/SMEARVarLookup.jl](src/julia/SMEARVarLookup.jl) instead of hardcoding names.
+- If dependencies drift, rerun:
+
+```bash
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
+```

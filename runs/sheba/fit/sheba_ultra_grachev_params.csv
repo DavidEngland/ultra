@@ -1,0 +1,2 @@
+dataset,a,b,alpha_xi,lambda_star,ridge,n_ultra,regime,split_mode,baseline_mode,xi_mode
+SHEBA,2.49844027746819,0.6766125007389536,1.7427953628298036,0.75,0.0001,5,stable,blocked,grachev,log

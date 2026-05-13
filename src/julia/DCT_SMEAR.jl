@@ -12,24 +12,116 @@ using Statistics
 const START_DT = DateTime(2025, 5, 1)
 const END_DT   = DateTime(2025, 6, 1)
 const OUT_DIR  = joinpath(@__DIR__, "..", "..", "runs", "dct_smear_20250501_20250601")
+const STATUS_PATH = joinpath(OUT_DIR, "run_status.txt")
 mkpath(OUT_DIR)
+
+write_status(lines::Vector{String}) = open(STATUS_PATH, "w") do io
+	for line in lines
+		write(io, line * "\n")
+	end
+end
+
+function remove_stale_plots()
+	for path in [
+		joinpath(OUT_DIR, "plot_stability_counts.png"),
+		joinpath(OUT_DIR, "plot_shape_ratio_vs_zeta.png"),
+		joinpath(OUT_DIR, "plot_coeff_distributions.png"),
+		joinpath(OUT_DIR, "plot_c3_c1_hist.png"),
+		joinpath(OUT_DIR, "plot_phase_c1_c3.png"),
+	]
+		isfile(path) && rm(path; force=true)
+	end
+end
+
+function fetch_temperature_with_fallback(start_dt::DateTime, end_dt::DateTime)
+	candidates = [
+		(
+			name = "legacy_aliases",
+			cols = [
+				SmearPipeline.VAR_VARS[:T_2m],
+				SmearPipeline.VAR_VARS[:T_4m],
+				SmearPipeline.VAR_VARS[:T_6_6m],
+				SmearPipeline.VAR_VARS[:T_9m],
+				SmearPipeline.VAR_VARS[:T_15m],
+			],
+			heights = SmearPipeline.VAR_HEIGHTS[:T],
+		),
+		(
+			name = "metadata_tdry",
+			cols = ["VAR_META.TDRY4", "VAR_META.TDRY3", "VAR_META.TDRY2", "VAR_META.TDRY1", "VAR_META.TDRY0"],
+			heights = [2.2, 4.4, 6.6, 9.0, 15.0],
+		),
+	]
+
+	last_err = nothing
+	for candidate in candidates
+		try
+			df = fetch_smear_tiled(candidate.cols, start_dt, end_dt)
+			if nrow(df) > 0
+				return df, candidate.cols, candidate.heights, candidate.name
+			end
+			@warn "Candidate returned no rows" candidate=candidate.name
+		catch err
+			last_err = err
+			@warn "Candidate fetch failed" candidate=candidate.name exception=(err, catch_backtrace())
+		end
+	end
+
+	error("All temperature-variable candidates failed. Last error: $(last_err)")
+end
 
 
 # --- VÄRRIÖ (STATION 1) ---
-# 1. Pull Temperature data (existing runtime mapping)
-t_cols = [SmearPipeline.VAR_VARS[:T_2m], SmearPipeline.VAR_VARS[:T_4m], SmearPipeline.VAR_VARS[:T_6_6m], SmearPipeline.VAR_VARS[:T_9m], SmearPipeline.VAR_VARS[:T_15m]]
-vars = t_cols
+run_started = now()
+write_status([
+	"status=running",
+	"started=$(run_started)",
+	"out_dir=$(OUT_DIR)",
+	"time_range=$(START_DT) to $(END_DT)",
+])
 
-raw_df = fetch_smear_tiled(vars, DateTime(2025, 5, 1), DateTime(2025, 6, 1))
+# 1. Pull Temperature data with fallback variable sets
+raw_df, t_cols, t_heights, fetch_source = fetch_temperature_with_fallback(START_DT, END_DT)
 
 # 2. Build 30-min median profiles (Värriö mast temperature profile)
-t_heights = SmearPipeline.VAR_HEIGHTS[:T]
 profiles = build_vertical_profiles(raw_df, :T; col_names=t_cols, heights=t_heights)
 
 # 3. Transform to Spectral Space
 fingerprints = batch_fingerprint(profiles, :T)
 
-isempty(fingerprints) && error("No fingerprints generated for requested range; try a different date window or fewer missing-sensitive variables.")
+if isempty(fingerprints)
+	report_path = joinpath(OUT_DIR, "report.md")
+	CSV.write(joinpath(OUT_DIR, "fingerprints.csv"), DataFrame())
+	CSV.write(joinpath(OUT_DIR, "stable_events.csv"), DataFrame())
+	CSV.write(joinpath(OUT_DIR, "stability_counts.csv"), DataFrame(stability=String[], count=Int[]))
+	CSV.write(joinpath(OUT_DIR, "diagnostics_summary.csv"), DataFrame(metric=["n_profiles", "fetch_source"], value=[0.0, NaN]))
+	remove_stale_plots()
+
+	open(report_path, "w") do io
+		write(io, "# DCT-SMEAR Results\n\n")
+		write(io, "No fingerprints were generated for the requested window.\n\n")
+		write(io, "- Time range: $(START_DT) to $(END_DT)\n")
+		write(io, "- Fetch source: $(fetch_source)\n")
+		write(io, "- Raw rows fetched: $(nrow(raw_df))\n")
+		write(io, "- Profiles fingerprinted: 0\n")
+		write(io, "\nTry a different date range or verify variable availability for this station/time period.\n")
+	end
+
+	write_status([
+		"status=no_fingerprints",
+		"started=$(run_started)",
+		"finished=$(now())",
+		"fetch_source=$(fetch_source)",
+		"raw_rows=$(nrow(raw_df))",
+		"profiles=0",
+		"fingerprints=0",
+		"report=$(report_path)",
+	])
+
+	println("No fingerprints generated. Wrote status: $(STATUS_PATH)")
+	println("Report: $(report_path)")
+
+else
 
 # 4. Classify and Analyze
 SmearPipeline.add_stability_class!(fingerprints)
@@ -46,7 +138,7 @@ sort!(counts, :count, rev=true)
 CSV.write(joinpath(OUT_DIR, "stability_counts.csv"), counts)
 
 coef_stats = DataFrame(
-	metric = ["n_profiles", "n_stable", "stable_fraction", "mean_c2", "mean_c3", "mean_shape_ratio", "median_ustar"],
+	metric = ["n_profiles", "n_stable", "stable_fraction", "mean_c2", "mean_c3", "mean_shape_ratio", "median_ustar", "fetch_source"],
 	value = [
 		nrow(fingerprints),
 		nrow(stable_events),
@@ -55,6 +147,7 @@ coef_stats = DataFrame(
 		mean(skipmissing(fingerprints.c3)),
 		mean(skipmissing(fingerprints.shape_ratio)),
 		median(skipmissing(fingerprints.ustar)),
+		NaN,
 	],
 )
 CSV.write(joinpath(OUT_DIR, "diagnostics_summary.csv"), coef_stats)
@@ -137,6 +230,7 @@ report_path = joinpath(OUT_DIR, "report.md")
 open(report_path, "w") do io
 	write(io, "# DCT-SMEAR Results\n\n")
 	write(io, "- Time range: $(START_DT) to $(END_DT)\n")
+	write(io, "- Temperature fetch source: $(fetch_source)\n")
 	write(io, "- Raw rows fetched: $(nrow(raw_df))\n")
 	write(io, "- Profiles fingerprinted: $(nrow(fingerprints))\n")
 	write(io, @sprintf("- Stable events: %d (%.1f%%)\n\n", nrow(stable_events), stable_frac_pct))
@@ -161,5 +255,20 @@ open(report_path, "w") do io
 	write(io, "- plot_coeff_distributions.png\n")
 end
 
+write_status([
+	"status=ok",
+	"started=$(run_started)",
+	"finished=$(now())",
+	"fetch_source=$(fetch_source)",
+	"raw_rows=$(nrow(raw_df))",
+	"profiles=$(nrow(profiles))",
+	"fingerprints=$(nrow(fingerprints))",
+	"stable_events=$(nrow(stable_events))",
+	"report=$(report_path)",
+])
+
 println("Results written to: $(OUT_DIR)")
 println("Report: $(report_path)")
+println("Status: $(STATUS_PATH)")
+
+end

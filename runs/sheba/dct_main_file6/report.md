@@ -1,0 +1,25 @@
+# SHEBA DCT Two-Layer Analysis
+
+- Input: /Users/davidengland/Documents/GitHub/ultra/runs/sheba/input/sheba_input.csv
+- Rows used: 2266
+- Quantile bins: 48
+- DCT modes kept: 8
+- Binned reconstruction RMSE: 1.86485
+- Binned reconstruction MAE: 1.53545
+- Spectral variance kept: 99.34%
+
+## Regime Summary
+
+- weak_stable: n=1855, median(zeta)=0.06844344456942883, median(phi_m)=0.9453262786596118, mean(phi_m)=1.1035790137747794
+- moderate_stable: n=338, median(zeta)=0.9302887644481397, median(phi_m)=2.9223057644110275, mean(phi_m)=3.00404959410988
+- very_stable: n=73, median(zeta)=2.5820701458688275, median(phi_m)=5.12, mean(phi_m)=4.8800117081612955
+
+## Artifacts
+
+- sheba_binned_profile.csv
+- sheba_dct_coeffs.csv
+- sheba_dct_reconstruction.csv
+- sheba_regime_stats.csv
+- sheba_dct_diagnostics.csv
+- plot_sheba_dct_curve.png
+- plot_sheba_dct_coeffs.png
