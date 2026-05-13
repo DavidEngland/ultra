@@ -1,5 +1,7 @@
 include(joinpath(@__DIR__, "SmearPipeline.jl"))
+include(joinpath(@__DIR__, "SMEARVarLookup.jl"))
 using .SmearPipeline
+using .SMEARVarLookup
 using CSV
 using DataFrames
 using Dates
@@ -12,14 +14,16 @@ const END_DT   = DateTime(2025, 6, 1)
 const OUT_DIR  = joinpath(@__DIR__, "..", "..", "runs", "dct_smear_20250501_20250601")
 mkpath(OUT_DIR)
 
-# 1. Pull Temperature and CO2 data
-t_cols = ["HYY_META.Tst33", "HYY_META.Tst88", "HYY_META.Tst168", "HYY_META.Tst270"]
-vars = vcat(t_cols, [SmearPipeline.HYY_VARS[:L_obukhov], SmearPipeline.HYY_VARS[:ustar]])
+
+# --- VÄRRIÖ (STATION 1) ---
+# 1. Pull Temperature data (existing runtime mapping)
+t_cols = [SmearPipeline.VAR_VARS[:T_2m], SmearPipeline.VAR_VARS[:T_4m], SmearPipeline.VAR_VARS[:T_6_6m], SmearPipeline.VAR_VARS[:T_9m], SmearPipeline.VAR_VARS[:T_15m]]
+vars = t_cols
 
 raw_df = fetch_smear_tiled(vars, DateTime(2025, 5, 1), DateTime(2025, 6, 1))
 
-# 2. Build 30-min median profiles (ICOS mast temperature profile)
-t_heights = [3.3, 8.8, 16.8, 27.0]
+# 2. Build 30-min median profiles (Värriö mast temperature profile)
+t_heights = SmearPipeline.VAR_HEIGHTS[:T]
 profiles = build_vertical_profiles(raw_df, :T; col_names=t_cols, heights=t_heights)
 
 # 3. Transform to Spectral Space
@@ -81,6 +85,8 @@ p_shape = scatter(
 )
 savefig(p_shape, joinpath(OUT_DIR, "plot_shape_ratio_vs_zeta.png"))
 
+
+# Histogram of c2 and c3
 p_coeff = histogram(
 	[fingerprints.c2 fingerprints.c3];
 	bins=50,
@@ -92,6 +98,38 @@ p_coeff = histogram(
 	title="Spectral Coefficient Distributions",
 )
 savefig(p_coeff, joinpath(OUT_DIR, "plot_coeff_distributions.png"))
+
+# --- Plot c3/c1 ratio ---
+if hasproperty(fingerprints, :c1) && hasproperty(fingerprints, :c3)
+	valid_c1 = .!isnan.(fingerprints.c1) .& (abs.(fingerprints.c1) .> 1e-8)
+	c3_c1 = fingerprints.c3[valid_c1] ./ fingerprints.c1[valid_c1]
+	p_c3c1 = histogram(
+		c3_c1;
+		bins=50,
+		alpha=0.7,
+		xlabel="c3 / c1",
+		ylabel="Density",
+		title="Distribution of c3/c1 (Värriö)",
+		legend=false,
+	)
+	savefig(p_c3c1, joinpath(OUT_DIR, "plot_c3_c1_hist.png"))
+end
+
+# --- Phase portrait: c1 vs c3 ---
+if hasproperty(fingerprints, :c1) && hasproperty(fingerprints, :c3)
+	valid_phase = .!isnan.(fingerprints.c1) .& .!isnan.(fingerprints.c3)
+	p_phase = scatter(
+		fingerprints.c1[valid_phase],
+		fingerprints.c3[valid_phase];
+		alpha=0.5,
+		markersize=2.5,
+		xlabel="c1",
+		ylabel="c3",
+		title="Phase Portrait: c1 vs c3 (Värriö)",
+		legend=false,
+	)
+	savefig(p_phase, joinpath(OUT_DIR, "plot_phase_c1_c3.png"))
+end
 
 # 7. Markdown report
 stable_frac_pct = 100 * nrow(stable_events) / nrow(fingerprints)

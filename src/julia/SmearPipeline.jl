@@ -13,6 +13,37 @@ Dependencies (add to Project.toml):
 
 module SmearPipeline
 
+# ─────────────────────────────────────────────
+# VARRIÖ (STATION 1) CONSTANTS
+# ─────────────────────────────────────────────
+
+const VAR_VARS = Dict(
+    # Temperature profile (°C) -- likely SmartSMEAR variable names
+    :T_2m  => "VAR_META.T2",
+    :T_4m  => "VAR_META.T4",
+    :T_6_6m => "VAR_META.T66",
+    :T_9m  => "VAR_META.T9",
+    :T_15m => "VAR_META.T15",
+    # Wind speed (optional, for future use)
+    :WS_2m  => "VAR_META.WS2",
+    :WS_4m  => "VAR_META.WS4",
+    :WS_6_6m => "VAR_META.WS66",
+    :WS_9m  => "VAR_META.WS9",
+    :WS_15m => "VAR_META.WS15",
+    # Wind direction (optional)
+    :WD_2m  => "VAR_META.WD2",
+    :WD_4m  => "VAR_META.WD4",
+    :WD_6_6m => "VAR_META.WD66",
+    :WD_9m  => "VAR_META.WD9",
+    :WD_15m => "VAR_META.WD15",
+)
+
+const VAR_HEIGHTS = Dict(
+    :T => [2.0, 4.0, 6.6, 9.0, 15.0],
+    :WS => [2.0, 4.0, 6.6, 9.0, 15.0],
+    :WD => [2.0, 4.0, 6.6, 9.0, 15.0],
+)
+
 using HTTP
 using CSV
 using DataFrames

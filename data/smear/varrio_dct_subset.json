@@ -1,0 +1,62 @@
+{
+  "station_id": 1,
+  "station_name": "Värriö",
+  "dct_varrio_subset": {
+    "temperature_profile": [
+      "VAR_META.TDRY0",
+      "VAR_META.TDRY1",
+      "VAR_META.TDRY2",
+      "VAR_META.TDRY3",
+      "VAR_META.TDRY4"
+    ],
+    "wind_profile": [
+      "VAR_META.WS0",
+      "VAR_META.WS1",
+      "VAR_META.WS2",
+      "VAR_META.WS3",
+      "VAR_META.WS4",
+      "VAR_META.WDIR"
+    ],
+    "temperature_profile_legacy": [
+      "VAR_META.T2",
+      "VAR_META.T4",
+      "VAR_META.T66",
+      "VAR_META.T9",
+      "VAR_META.T15"
+    ],
+    "wind_profile_legacy": [
+      "VAR_META.WS2",
+      "VAR_META.WS4",
+      "VAR_META.WS66",
+      "VAR_META.WS9",
+      "VAR_META.WS15",
+      "VAR_META.WD2",
+      "VAR_META.WD4",
+      "VAR_META.WD66",
+      "VAR_META.WD9",
+      "VAR_META.WD15"
+    ],
+    "flux_core": [
+      "VAR_EDDY.H",
+      "VAR_EDDY.LE",
+      "VAR_EDDY.E",
+      "VAR_EDDY.F_c",
+      "VAR_EDDY.tau",
+      "VAR_EDDY.u_star",
+      "VAR_EDDY.MO_length",
+      "VAR_EDDY.U",
+      "VAR_EDDY.wind_dir"
+    ],
+    "flux_quality": [
+      "VAR_EDDY.Qc_H",
+      "VAR_EDDY.Qc_LE",
+      "VAR_EDDY.Qc_F_c",
+      "VAR_EDDY.Qc_tau"
+    ],
+    "flux_storage": [
+      "VAR_EDDY.CO2_storage_flux",
+      "VAR_EDDY.H_storage_flux",
+      "VAR_EDDY.LE_storage_flux"
+    ]
+  }
+}
