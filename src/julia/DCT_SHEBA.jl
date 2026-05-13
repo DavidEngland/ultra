@@ -64,7 +64,7 @@ function dct_reconstruct(y::Vector{Float64}; nkeep::Int=N_KEEP)
 	c = dct(y)
 	c_trunc = zeros(length(c))
 	c_trunc[1:min(nkeep, length(c))] .= c[1:min(nkeep, length(c))]
-	yhat = idct(c_trunc) ./ (2 * length(y))
+	yhat = idct(c_trunc)
 	return c, c_trunc, yhat
 end
 

@@ -2,6 +2,6 @@ metric,value
 n_rows,2266.0
 n_bins,48.0
 n_modes_kept,8.0
-rmse_binned,1.86484903516314
-mae_binned,1.5354469304321015
+rmse_binned,0.1529838756842203
+mae_binned,0.09843496652230972
 variance_fraction_kept,0.9934087273068256

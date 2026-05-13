@@ -4,8 +4,8 @@
 - Rows used: 2266
 - Quantile bins: 48
 - DCT modes kept: 8
-- Binned reconstruction RMSE: 1.86485
-- Binned reconstruction MAE: 1.53545
+- Binned reconstruction RMSE: 0.15298
+- Binned reconstruction MAE: 0.09843
 - Spectral variance kept: 99.34%
 
 ## Regime Summary
