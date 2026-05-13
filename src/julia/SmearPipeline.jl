@@ -58,15 +58,15 @@ const HYY_VARS = Dict(
     :o3_16m   => "HYY_META.O3_16",
     :o3_32m   => "HYY_META.O3_32",
     # Temperature profile (°C)
-    :T_2m     => "HYY_META.T168",
-    :T_4m     => "HYY_META.T336",
-    :T_8m     => "HYY_META.T672",
-    :T_16m    => "HYY_META.T1344",
-    :T_32m    => "HYY_META.T2688",
-    :T_67m    => "HYY_META.T5376",
+    :T_2m     => "HYY_META.T42",
+    :T_4m     => "HYY_META.T84",
+    :T_8m     => "HYY_META.T168",
+    :T_16m    => "HYY_META.T336",
+    :T_32m    => "HYY_META.T504",
+    :T_67m    => "HYY_META.T672",
     # Stability / flux metadata
     :ustar    => "HYY_EDDY233.u_star",
-    :L_obukhov => "HYY_EDDY233.L",       # Obukhov length (m)
+    :L_obukhov => "HYY_EDDY233.MO_length",       # Obukhov length (m)
     :H_flux   => "HYY_EDDY233.H",        # Sensible heat flux (W m⁻²)
     :LE_flux  => "HYY_EDDY233.LE",       # Latent heat flux (W m⁻²)
     :wind_spd => "HYY_META.WSP_1",
@@ -77,7 +77,7 @@ const HYY_VARS = Dict(
 const HYY_HEIGHTS = Dict(
     :co2 => [4.2, 8.4, 16.8, 33.6, 67.2],
     :o3  => [4.0, 8.0, 16.0, 32.0],
-    :T   => [2.0, 4.0, 8.0, 16.0, 32.0, 67.0],
+    :T   => [4.2, 8.4, 16.8, 33.6, 67.2],
 )
 
 # ─────────────────────────────────────────────
@@ -321,12 +321,19 @@ function _default_colnames(tracer::Symbol)
                                "HYY_EDDY233.CO2_17","HYY_EDDY233.CO2_34","HYY_EDDY233.CO2_67"]
     tracer == :o3  && return ["HYY_META.O3_4","HYY_META.O3_8",
                                "HYY_META.O3_16","HYY_META.O3_32"]
-    tracer == :T   && return ["HYY_META.T168","HYY_META.T336","HYY_META.T672",
-                               "HYY_META.T1344","HYY_META.T2688","HYY_META.T5376"]
+    tracer == :T   && return ["HYY_META.T42","HYY_META.T84","HYY_META.T168",
+                               "HYY_META.T336","HYY_META.T672"]
     error("Unknown tracer: $tracer")
 end
 
-_nanmedian(v) = isempty(v) ? NaN : median(filter(!ismissing, v .|> Float64))
+function _nanmedian(v)
+    vals = Float64[]
+    for x in v
+        ismissing(x) && continue
+        push!(vals, Float64(x))
+    end
+    return isempty(vals) ? NaN : median(vals)
+end
 
 # ─────────────────────────────────────────────
 # 6. CHEBYSHEV SPECTRAL FINGERPRINT
