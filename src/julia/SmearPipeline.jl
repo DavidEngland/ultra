@@ -143,16 +143,19 @@ function _fetch_tile(
     aggregation::String,
     quality::String,
 )
-    var_str  = join(tablevars, ",")
     from_str = Dates.format(start_dt, "yyyy-mm-ddTHH:MM:SS")
     to_str   = Dates.format(end_dt,   "yyyy-mm-ddTHH:MM:SS")
 
-    url = "$(SMEAR_BASE)/search/timeseries/csv" *
-          "?tablevariable=$(var_str)" *
-          "&from=$(from_str)" *
-          "&to=$(to_str)" *
-          "&quality=$(quality)" *
-          "&aggregation=$(aggregation)"
+    # SmartSMEAR expects repeated tablevariable query keys (not comma-joined values).
+    params = String[]
+    for tv in tablevars
+        push!(params, "tablevariable=$(tv)")
+    end
+    push!(params, "from=$(from_str)")
+    push!(params, "to=$(to_str)")
+    push!(params, "quality=$(quality)")
+    push!(params, "aggregation=$(aggregation)")
+    url = "$(SMEAR_BASE)/search/timeseries/csv?" * join(params, "&")
 
     for attempt in 1:MAX_RETRY
         try
