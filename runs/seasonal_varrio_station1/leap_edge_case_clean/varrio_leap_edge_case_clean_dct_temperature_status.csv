@@ -1,0 +1,5 @@
+season_year,season_date,target_doy,temp_source,status,rows,message
+2023,,366,metadata_tdry,error,0,DOY 366 is out of range for year 2023 (max 365)
+2023,,366,legacy_t,error,0,DOY 366 is out of range for year 2023 (max 365)
+2023,,366,none,empty,0,No candidate set returned rows
+2024,2024-12-31,366,metadata_tdry,ok,1440,

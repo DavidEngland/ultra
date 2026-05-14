@@ -1,0 +1,12 @@
+artifact,rows,note
+varrio_dead_of_winter_2012_2025_all_groups.csv,20160,Union of all seasonal groups on datetime + season keys
+varrio_dead_of_winter_2012_2025_fetch_status.csv,98,Per-group and per-year fetch diagnostics
+varrio_dead_of_winter_2012_2025_dct_temperature_input.csv,20160,DCT_SMEAR-ready temperature+stability input with source fallback
+varrio_dead_of_winter_2012_2025_dct_temperature_status.csv,14,Per-year candidate-source outcome for DCT input
+varrio_dead_of_winter_2012_2025_co2_tracers.csv,20160,Seasonal group export
+varrio_dead_of_winter_2012_2025_heat_flux.csv,672,Seasonal group export
+varrio_dead_of_winter_2012_2025_humidity_profile.csv,20160,Seasonal group export
+varrio_dead_of_winter_2012_2025_momentum_flux.csv,672,Seasonal group export
+varrio_dead_of_winter_2012_2025_other_tracers.csv,672,Seasonal group export
+varrio_dead_of_winter_2012_2025_temperature_profile.csv,20160,Seasonal group export
+varrio_dead_of_winter_2012_2025_wind_profile.csv,20160,Seasonal group export

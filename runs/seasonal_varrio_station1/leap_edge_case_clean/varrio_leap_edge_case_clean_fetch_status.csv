@@ -1,0 +1,15 @@
+group_name,season_year,season_date,target_doy,start_dt,end_dt,status,rows,message
+co2_tracers,2023,,366,,,error,0,DOY 366 is out of range for year 2023 (max 365)
+co2_tracers,2024,2024-12-31,366,2024-12-31T00:00:00,2025-01-01T00:00:00,ok,1440,
+heat_flux,2023,,366,,,error,0,DOY 366 is out of range for year 2023 (max 365)
+heat_flux,2024,2024-12-31,366,2024-12-31T00:00:00,2025-01-01T00:00:00,ok,48,
+humidity_profile,2023,,366,,,error,0,DOY 366 is out of range for year 2023 (max 365)
+humidity_profile,2024,2024-12-31,366,2024-12-31T00:00:00,2025-01-01T00:00:00,ok,1440,
+momentum_flux,2023,,366,,,error,0,DOY 366 is out of range for year 2023 (max 365)
+momentum_flux,2024,2024-12-31,366,2024-12-31T00:00:00,2025-01-01T00:00:00,ok,48,
+other_tracers,2023,,366,,,error,0,DOY 366 is out of range for year 2023 (max 365)
+other_tracers,2024,2024-12-31,366,2024-12-31T00:00:00,2025-01-01T00:00:00,ok,48,
+temperature_profile,2023,,366,,,error,0,DOY 366 is out of range for year 2023 (max 365)
+temperature_profile,2024,2024-12-31,366,2024-12-31T00:00:00,2025-01-01T00:00:00,ok,1440,
+wind_profile,2023,,366,,,error,0,DOY 366 is out of range for year 2023 (max 365)
+wind_profile,2024,2024-12-31,366,2024-12-31T00:00:00,2025-01-01T00:00:00,ok,1440,

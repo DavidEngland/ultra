@@ -1,0 +1,12 @@
+artifact,rows,note
+varrio_leap_edge_case_all_groups.csv,1440,Union of all seasonal groups on datetime + season keys
+varrio_leap_edge_case_fetch_status.csv,14,Per-group and per-year fetch diagnostics
+varrio_leap_edge_case_dct_temperature_input.csv,1440,DCT_SMEAR-ready temperature+stability input with source fallback
+varrio_leap_edge_case_dct_temperature_status.csv,4,Per-year candidate-source outcome for DCT input
+varrio_leap_edge_case_co2_tracers.csv,1440,Seasonal group export
+varrio_leap_edge_case_heat_flux.csv,48,Seasonal group export
+varrio_leap_edge_case_humidity_profile.csv,1440,Seasonal group export
+varrio_leap_edge_case_momentum_flux.csv,48,Seasonal group export
+varrio_leap_edge_case_other_tracers.csv,48,Seasonal group export
+varrio_leap_edge_case_temperature_profile.csv,1440,Seasonal group export
+varrio_leap_edge_case_wind_profile.csv,1440,Seasonal group export
