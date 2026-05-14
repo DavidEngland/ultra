@@ -1,0 +1,9 @@
+status=ok
+started=2026-05-14T13:19:27.558
+finished=2026-05-14T13:19:36.064
+fetch_source=preprocessed_csv:metadata_tdry
+raw_rows=2880
+profiles=96
+fingerprints=96
+stable_events=0
+report=runs/dct_smear_varrio_dead_of_winter_2024_2025/report.md

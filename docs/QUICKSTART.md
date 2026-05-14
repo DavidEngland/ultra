@@ -52,6 +52,32 @@ julia --project=. -e 'include("src/julia/SMEARVarLookup.jl"); using .SMEARVarLoo
 
 ## 4) Other Common Entry Scripts
 
+Varrio seasonal preprocessing (same day-of-year across years, station 1):
+
+```bash
+julia --project=. src/julia/SMEAR_seasonal.jl --start-year=2016 --end-year=2025 --doy=15 --season=dead_of_winter
+```
+
+This writes grouped tracer inputs under:
+
+- [runs/seasonal_varrio_station1/dead_of_winter](runs/seasonal_varrio_station1/dead_of_winter)
+
+Key outputs include:
+
+- [runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_heat_flux.csv](runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_heat_flux.csv)
+- [runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_momentum_flux.csv](runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_momentum_flux.csv)
+- [runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_humidity_profile.csv](runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_humidity_profile.csv)
+- [runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_co2_tracers.csv](runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_co2_tracers.csv)
+- [runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_dct_temperature_input.csv](runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_dct_temperature_input.csv)
+
+Run DCT_SMEAR on the preprocessed seasonal input:
+
+```bash
+DCT_SMEAR_INPUT_CSV="runs/seasonal_varrio_station1/dead_of_winter/varrio_dead_of_winter_dct_temperature_input.csv" \
+DCT_SMEAR_OUT_DIR="runs/dct_smear_varrio_dead_of_winter" \
+julia --project=. -e 'include("src/julia/DCT_SMEAR.jl")'
+```
+
 SHEBA preprocess:
 
 ```bash

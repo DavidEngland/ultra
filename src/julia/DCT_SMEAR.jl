@@ -11,7 +11,8 @@ using Statistics
 
 const START_DT = DateTime(2025, 5, 1)
 const END_DT   = DateTime(2025, 6, 1)
-const OUT_DIR  = joinpath(@__DIR__, "..", "..", "runs", "dct_smear_20250501_20250601")
+const DEFAULT_OUT_DIR = joinpath(@__DIR__, "..", "..", "runs", "dct_smear_20250501_20250601")
+const OUT_DIR  = get(ENV, "DCT_SMEAR_OUT_DIR", DEFAULT_OUT_DIR)
 const STATUS_PATH = joinpath(OUT_DIR, "run_status.txt")
 mkpath(OUT_DIR)
 
@@ -70,6 +71,35 @@ function fetch_temperature_with_fallback(start_dt::DateTime, end_dt::DateTime)
 	error("All temperature-variable candidates failed. Last error: $(last_err)")
 end
 
+function load_temperature_input_csv(path::AbstractString)
+	df = CSV.read(path, DataFrame; missingstring=["", "NaN", "NA"])
+	:datetime in propertynames(df) || error("Input CSV must contain a datetime column: $(path)")
+
+	# Normalize datetime type for downstream windowing in build_vertical_profiles.
+	if eltype(df.datetime) <: AbstractString
+		df.datetime = DateTime.(df.datetime)
+	elseif !(eltype(df.datetime) <: DateTime)
+		df.datetime = DateTime.(string.(df.datetime))
+	end
+
+	metadata_cols = ["VAR_META.TDRY4", "VAR_META.TDRY3", "VAR_META.TDRY2", "VAR_META.TDRY1", "VAR_META.TDRY0"]
+	legacy_cols = [
+		SmearPipeline.VAR_VARS[:T_2m],
+		SmearPipeline.VAR_VARS[:T_4m],
+		SmearPipeline.VAR_VARS[:T_6_6m],
+		SmearPipeline.VAR_VARS[:T_9m],
+		SmearPipeline.VAR_VARS[:T_15m],
+	]
+
+	if all(c -> c in names(df), metadata_cols)
+		return df, metadata_cols, [2.2, 4.4, 6.6, 9.0, 15.0], "preprocessed_csv:metadata_tdry"
+	elseif all(c -> c in names(df), legacy_cols)
+		return df, legacy_cols, SmearPipeline.VAR_HEIGHTS[:T], "preprocessed_csv:legacy_aliases"
+	end
+
+	error("Input CSV missing required temperature profile columns for DCT_SMEAR: $(path)")
+end
+
 
 # --- VÄRRIÖ (STATION 1) ---
 run_started = now()
@@ -80,8 +110,13 @@ write_status([
 	"time_range=$(START_DT) to $(END_DT)",
 ])
 
-# 1. Pull Temperature data with fallback variable sets
-raw_df, t_cols, t_heights, fetch_source = fetch_temperature_with_fallback(START_DT, END_DT)
+# 1. Pull Temperature data with fallback variable sets (or load preprocessed seasonal CSV)
+input_csv = get(ENV, "DCT_SMEAR_INPUT_CSV", "")
+raw_df, t_cols, t_heights, fetch_source = if isempty(input_csv)
+	fetch_temperature_with_fallback(START_DT, END_DT)
+else
+	load_temperature_input_csv(input_csv)
+end
 
 # 2. Build 30-min median profiles (Värriö mast temperature profile)
 profiles = build_vertical_profiles(raw_df, :T; col_names=t_cols, heights=t_heights)

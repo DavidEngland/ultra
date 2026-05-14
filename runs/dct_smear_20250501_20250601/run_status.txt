@@ -1,8 +1,4 @@
-status=no_fingerprints
-started=2026-05-13T12:32:03.224
-finished=2026-05-13T12:37:42.031
-fetch_source=metadata_tdry
-raw_rows=44640
-profiles=0
-fingerprints=0
-report=/Users/davidengland/Documents/GitHub/ultra/src/julia/../../runs/dct_smear_20250501_20250601/report.md
+status=running
+started=2026-05-14T13:23:16.331
+out_dir=/Users/davidengland/Documents/GitHub/ultra/src/julia/../../runs/dct_smear_20250501_20250601
+time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
