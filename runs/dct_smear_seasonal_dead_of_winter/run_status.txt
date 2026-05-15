@@ -1,6 +1,6 @@
 status=ok
-started=2026-05-14T14:13:44.046
-finished=2026-05-14T14:13:54.194
+started=2026-05-15T10:09:05.055
+finished=2026-05-15T10:09:18.679
 input_dir=/Users/davidengland/Documents/GitHub/ultra/src/julia/../../runs/seasonal_varrio_station1/dead_of_winter
 out_dir=/Users/davidengland/Documents/GitHub/ultra/src/julia/../../runs/dct_smear_seasonal_dead_of_winter
 files_processed=8

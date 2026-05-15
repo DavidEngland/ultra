@@ -27,11 +27,51 @@
 using CSV
 using DataFrames
 using Dates
+using JSON3
 using Plots
 using Printf
 using Statistics
 
 const REPO_ROOT = normpath(joinpath(@__DIR__, "..", ".."))
+
+# ── Variable label lookup (from data/smear/vars.json) ─────────────────────────
+function load_var_labels(json_path::String)::Dict{String,String}
+    isfile(json_path) || return Dict{String,String}()
+    data = JSON3.read(read(json_path, String))
+    labels = Dict{String,String}()
+    for station in data
+        for cat in get(station, :categories, [])
+            for v in get(cat, :variables, [])
+                tv = get(v, :tablevariable, nothing)
+                title = get(v, :title, nothing)
+                if !isnothing(tv) && !isnothing(title)
+                    labels[String(tv)] = String(title)
+                end
+            end
+        end
+    end
+    return labels
+end
+
+const _JSON_LABELS = load_var_labels(joinpath(REPO_ROOT, "data", "smear", "vars.json"))
+
+# Human-readable labels for spectral predictors and common column names
+const PREDICTOR_LABELS = Dict(
+    "c1"          => "c₁ (mean level)",
+    "c2"          => "c₂ (gradient)",
+    "c3"          => "c₃ (curvature)",
+    "c4"          => "c₄ (fine structure)",
+    "shape_ratio"  => "Shape ratio (c₂/c₁)",
+    "zeta"        => "ζ = z/L (stability)",
+    "ustar"       => "u* (friction velocity, m s⁻¹)",
+)
+
+"""Return a plot-friendly label for a tablevariable or spectral predictor."""
+function var_label(name::String)::String
+    haskey(PREDICTOR_LABELS, name) && return PREDICTOR_LABELS[name]
+    haskey(_JSON_LABELS, name)     && return _JSON_LABELS[name]
+    return name
+end
 
 # ── ENV config ────────────────────────────────────────────────────────────────
 const SEASON = get(ENV, "FLUX_CORR_SEASON", "dead_of_winter")
@@ -150,29 +190,47 @@ function load_flux_csv(path::String, flux_vars::Vector{String}, qc_map::Dict)
     return df
 end
 
-"""Collapse a fingerprints DataFrame to one row per 30-min window (median)."""
+"""Normalise fingerprints to one row per 30-min window.
+
+The DCT seasonal script already emits one fingerprint per 30-min window,
+so this mostly just snaps datetimes and drops rare duplicates by taking
+the median across any genuine duplicates in the window.
+"""
 function aggregate_fingerprints(fp::DataFrame)
+    num_cols = [c for c in SPECTRAL_PREDICTORS if c in names(fp)]
+    extra_num = [c for c in ["zeta", "ustar"] if c in names(fp)]
+    all_num = vcat(num_cols, extra_num)
+
     fp.window = floor.(fp.datetime, Minute(30))
-    agg = combine(groupby(fp, :window)) do g
-        row = NamedTuple{(:c1, :c2, :c3, :c4, :shape_ratio, :zeta, :ustar, :stability)}((
-            median(filter(!isnan, Float64.(g.c1))),
-            median(filter(!isnan, Float64.(g.c2))),
-            median(filter(!isnan, Float64.(g.c3))),
-            median(filter(!isnan, Float64.(g.c4))),
-            median(filter(!isnan, Float64.(g.shape_ratio))),
-            median(filter(!isnan, Float64.(g.zeta))),
-            median(filter(!isnan, Float64.(g.ustar))),
-            # Plurality stability label
-            begin
-                stabs = string.(g.stability)
-                mode_stab = first(sort(collect(values(countmap(stabs))); rev=true) |> _ ->
-                    [k for (k, v) in countmap(stabs) if v == maximum(values(countmap(stabs)))])
-                mode_stab
-            end,
-        ))
-        DataFrame([row])
+
+    # Fast path: already one row per window
+    if nrow(fp) == length(unique(fp.window))
+        keep_cols = vcat(["window"], all_num, "stability" in names(fp) ? ["stability"] : String[])
+        agg = select(fp, keep_cols)
+        rename!(agg, :window => :datetime)
+        sort!(agg, :datetime)
+        return agg
     end
-    rename!(agg, :window => :datetime)
+
+    # Slow path: collapse duplicates by median / plurality
+    rows = NamedTuple[]
+    for (key, g) in pairs(groupby(fp, :window))
+        vals = NamedTuple{(:datetime,)}((key.window,))
+        for col in all_num
+            v = filter(!isnan, _safe_float.(g[!, col]))
+            vals = merge(vals, NamedTuple{(Symbol(col),)}((isempty(v) ? NaN : median(v),)))
+        end
+        if "stability" in names(g)
+            stabs = string.(g.stability)
+            cm = countmap(stabs)
+            best = argmax(cm)
+            vals = merge(vals, (stability=best,))
+        end
+        push!(rows, vals)
+    end
+
+    agg = DataFrame(rows)
+    sort!(agg, :datetime)
     return agg
 end
 
@@ -212,10 +270,12 @@ println("  momentum_flux rows: $(nrow(momentum_df))")
 println("  co2_tracers rows: $(nrow(co2_df))")
 
 # ── Join ──────────────────────────────────────────────────────────────────────
-joined = fp
-for flux_df in (heat_df, momentum_df, co2_df)
-    isempty(flux_df) && continue
-    joined = leftjoin(joined, flux_df; on=:datetime, makeunique=true)
+let j = fp
+    for flux_df in (heat_df, momentum_df, co2_df)
+        isempty(flux_df) && continue
+        j = leftjoin(j, flux_df; on=:datetime, makeunique=true)
+    end
+    global joined = j
 end
 sort!(joined, :datetime)
 
@@ -262,17 +322,21 @@ if !isempty(valid_preds) && !isempty(all_flux_vars)
         for p in valid_preds, fv in all_flux_vars
     ]
 
+    flux_labels  = [var_label(v) for v in all_flux_vars]
+    pred_labels  = [var_label(p) for p in valid_preds]
+
     p_heat = heatmap(
-        all_flux_vars,
-        valid_preds,
+        flux_labels,
+        pred_labels,
         mat;
         color=:RdBu,
         clim=(-1, 1),
-        title="Pearson r: DCT coefficients vs Flux variables",
+        title="Pearson r: DCT coefficients vs flux variables",
         xlabel="Flux variable",
         ylabel="Spectral predictor",
-        xrotation=30,
+        xrotation=35,
         xtickfontsize=7,
+        ytickfontsize=8,
     )
     savefig(p_heat, joinpath(OUT_DIR, "plot_corr_heatmap.png"))
     println("Heatmap saved")
@@ -290,7 +354,7 @@ stability_colors = Dict(
     "unknown"           => :gray,
 )
 
-scatter_count = 0
+scatter_count = Ref(0)
 for row in eachrow(corr_df)
     isnan(row.pearson_r) && continue
     abs(row.pearson_r) < CORR_THRESHOLD && continue
@@ -306,28 +370,37 @@ for row in eachrow(corr_df)
     sum(ok) < 4 && continue
 
     stab = "stability" in names(joined) ? string.(coalesce.(joined[!, :stability], "unknown")) : fill("unknown", nrow(joined))
-    colors = [get(stability_colors, s, :gray) for s in stab[ok]]
+    stab_ok = stab[ok]
 
-    title_str = @sprintf("%s vs %s  r=%.3f  ρ=%.3f  N=%d",
-        pred, fv, row.pearson_r, row.spearman_rho, row.n)
+    xlabel_str = var_label(pred)
+    ylabel_str = var_label(fv)
+    title_str  = @sprintf("%s vs %s\nr = %.3f  ρ = %.3f  N = %d",
+        var_label(pred), var_label(fv), row.pearson_r, row.spearman_rho, row.n)
 
-    p = scatter(
-        x[ok], y[ok];
-        color=colors,
-        markersize=3.5,
-        alpha=0.55,
-        xlabel=pred,
-        ylabel=fv,
-        title=title_str,
-        legend=false,
-        titlefontsize=8,
-    )
+    # Collect unique stability classes present in this subset (sorted for determinism)
+    present_classes = sort(unique(stab_ok))
+
+    # First series: invisible anchor so Plots initialises the plot
+    p = plot(; xlabel=xlabel_str, ylabel=ylabel_str, title=title_str,
+               titlefontsize=8, legend=:outertopright, legendfontsize=7,
+               size=(700, 550), dpi=120)
+
+    for sc in present_classes
+        mask = stab_ok .== sc
+        scatter!(p, x[ok][mask], y[ok][mask];
+            label=sc,
+            color=get(stability_colors, sc, :gray),
+            markersize=3.5,
+            alpha=0.55,
+            markerstrokewidth=0,
+        )
+    end
 
     fname = replace("plot_$(pred)_vs_$(replace(fv, "." => "_")).png", "/" => "_")
     savefig(p, joinpath(OUT_DIR, fname))
-    scatter_count += 1
+    scatter_count[] += 1
 end
-println("Scatter plots saved: $(scatter_count) pairs with |r| >= $(CORR_THRESHOLD)")
+println("Scatter plots saved: $(scatter_count[]) pairs with |r| >= $(CORR_THRESHOLD)")
 
 # ── Markdown report ───────────────────────────────────────────────────────────
 open(joinpath(OUT_DIR, "report.md"), "w") do io
@@ -343,14 +416,15 @@ open(joinpath(OUT_DIR, "report.md"), "w") do io
     write(io, "- Correlation threshold for scatter plots: |r| ≥ $(CORR_THRESHOLD)\n\n")
 
     write(io, "## Correlation Summary\n\n")
-    write(io, "| Predictor | Flux variable | Pearson r | Spearman ρ | N |\n")
-    write(io, "|-----------|--------------|-----------|------------|---|\n")
+    write(io, "| Predictor | Flux variable | tablevariable | Pearson r | Spearman ρ | N |\n")
+    write(io, "|-----------|--------------|--------------|-----------|------------|---|\n")
 
     sorted_corr = sort(corr_df, :pearson_r; by=abs, rev=true)
     for row in eachrow(sorted_corr)
         isnan(row.pearson_r) && continue
-        write(io, @sprintf("| %s | %s | %.4f | %.4f | %d |\n",
-            row.predictor, row.flux_var, row.pearson_r, row.spearman_rho, row.n))
+        write(io, @sprintf("| %s | %s | %s | %.4f | %.4f | %d |\n",
+            row.predictor, var_label(row.flux_var), row.flux_var,
+            row.pearson_r, row.spearman_rho, row.n))
     end
 
     write(io, "\n## Strongest Associations (|r| ≥ 0.3)\n\n")
@@ -360,8 +434,9 @@ open(joinpath(OUT_DIR, "report.md"), "w") do io
     else
         for row in eachrow(strong)
             sign = row.pearson_r > 0 ? "positive" : "negative"
-            write(io, @sprintf("- **%s** × **%s**: r = %.3f (%s), N = %d\n",
-                row.predictor, row.flux_var, row.pearson_r, sign, row.n))
+            write(io, @sprintf("- **%s** × **%s** (`%s`): r = %.3f (%s), N = %d\n",
+                var_label(row.predictor), var_label(row.flux_var),
+                row.flux_var, row.pearson_r, sign, row.n))
         end
     end
 
@@ -369,7 +444,7 @@ open(joinpath(OUT_DIR, "report.md"), "w") do io
     write(io, "- `flux_fingerprint_joined.csv`\n")
     write(io, "- `flux_correlation_matrix.csv`\n")
     write(io, "- `plot_corr_heatmap.png`\n")
-    write(io, "- $(scatter_count) scatter plot(s) for |r| ≥ $(CORR_THRESHOLD)\n")
+    write(io, "- $(scatter_count[]) scatter plot(s) for |r| ≥ $(CORR_THRESHOLD)\n")
 end
 
 println("Report: $(joinpath(OUT_DIR, "report.md"))")

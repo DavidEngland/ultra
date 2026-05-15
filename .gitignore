@@ -1,0 +1,28 @@
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Environment and logs
+.env
+*.log
+
+# Julia cache/coverage artifacts
+*.jl.cov
+*.jl.mem
+
+# Binary artifacts
+*.jld2
+
+# Generated seasonal run outputs (large/regenerable)
+runs/dct_smear_seasonal_*/
+runs/seasonal_varrio_station1/
+
+# Keep SHEBA curated deliverables only
+# raw: keep plaintext source/checksum files
+data/sheba/raw/*
+!data/sheba/raw/*.txt
+
+# processed: keep curated CSV tables
+data/sheba/processed/*
+!data/sheba/processed/*.csv

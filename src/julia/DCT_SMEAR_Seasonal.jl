@@ -309,6 +309,152 @@ function write_file_report(out_dir::String, stem::String, in_file::String, profi
 	end
 end
 
+function _safe_cor(x::Vector{Float64}, y::Vector{Float64})
+	ok = .!isnan.(x) .& .!isnan.(y)
+	n = sum(ok)
+	n < 4 && return NaN, n
+	return cor(x[ok], y[ok]), n
+end
+
+function _load_fc_series(csv_path::String)
+	isfile(csv_path) || return DataFrame()
+	df = CSV.read(csv_path, DataFrame; missingstring=["", "NaN", "NA"])
+	:datetime in propertynames(df) || return DataFrame()
+	"VAR_EDDY.F_c" in names(df) || return DataFrame()
+
+	normalize_datetime!(df)
+	df.datetime = floor.(df.datetime, Minute(30))
+
+	# Apply standard quality filter if available.
+	if "VAR_EDDY.Qc_F_c" in names(df)
+		for i in 1:nrow(df)
+			qc = _safe_float(df[i, "VAR_EDDY.Qc_F_c"])
+			if !isnan(qc) && qc > 1
+				df[i, "VAR_EDDY.F_c"] = missing
+			end
+		end
+	end
+
+	keep = select(df, :datetime, "VAR_EDDY.F_c")
+	sort!(keep, :datetime)
+	combine(groupby(keep, :datetime), "VAR_EDDY.F_c" => (v -> begin
+		x = filter(!isnan, _safe_float.(v))
+		isempty(x) ? NaN : median(x)
+	end) => "VAR_EDDY.F_c")
+end
+
+function _crosscorr_temp_vs_fc(out_dir::String, stem::String, fingerprints::DataFrame, co2_csv_path::String)
+	co2 = _load_fc_series(co2_csv_path)
+	if isempty(co2)
+		return DataFrame(), DataFrame()
+	end
+
+	fp = select(fingerprints, [c for c in [:datetime, :c1, :c2, :c3, :c4, :shape_ratio] if c in propertynames(fingerprints)])
+	fp.datetime = floor.(fp.datetime, Minute(30))
+	fp = combine(groupby(fp, :datetime), names(fp, Not(:datetime)) .=> (v -> begin
+		x = filter(!isnan, _safe_float.(v))
+		isempty(x) ? NaN : median(x)
+	end) .=> names(fp, Not(:datetime)))
+
+	predictors = [p for p in ["c1", "c2", "c3", "c4", "shape_ratio"] if p in string.(names(fp))]
+	lags = -12:12  # half-hour windows: -6h..+6h
+	rows = NamedTuple[]
+
+	for pred in predictors
+		pred_df = select(fp, :datetime, Symbol(pred))
+		rename!(pred_df, Symbol(pred) => :pred_val)
+		for lag in lags
+			shifted = select(pred_df, :pred_val)
+			shifted.datetime = pred_df.datetime .+ Minute(30 * lag)
+			joined = innerjoin(shifted, co2; on=:datetime)
+			x = _safe_float.(joined.pred_val)
+			y = _safe_float.(joined[!, "VAR_EDDY.F_c"])
+			r, n = _safe_cor(x, y)
+			push!(rows, (
+				predictor=pred,
+				lag_30min=lag,
+				lag_hours=lag / 2,
+				pearson_r=r,
+				n=n,
+			))
+		end
+	end
+
+	crosscorr = DataFrame(rows)
+	if isempty(crosscorr)
+		return DataFrame(), DataFrame()
+	end
+	CSV.write(joinpath(out_dir, "crosscorr_temp_vs_fc.csv"), crosscorr)
+
+	default(size=(1100, 650), dpi=140)
+	p = plot(; xlabel="Lag (hours)", ylabel="Pearson r", title="Cross-correlation: Temperature DCT vs CO2 flux F_c ($(stem))")
+	for pred in predictors
+		sub = filter(r -> r.predictor == pred && !isnan(r.pearson_r), crosscorr)
+		isempty(sub) && continue
+		sort!(sub, :lag_hours)
+		plot!(p, sub.lag_hours, sub.pearson_r; label=pred, lw=2)
+	end
+	hline!(p, [0.0]; color=:black, linestyle=:dash, label="")
+	vline!(p, [0.0]; color=:black, linestyle=:dot, label="")
+	savefig(p, joinpath(out_dir, "plot_crosscorr_temp_vs_fc.png"))
+
+	# "How curvy before CO2 transport stops": use shape_ratio if available,
+	# otherwise fallback to |c3| + |c4| as a curvature proxy.
+	if "shape_ratio" in names(fp)
+		curv_col = :shape_ratio
+		curv_label = "shape_ratio"
+	elseif "c3" in names(fp) && "c4" in names(fp)
+		fp.curv_proxy = abs.(_safe_float.(fp.c3)) .+ abs.(_safe_float.(fp.c4))
+		curv_col = :curv_proxy
+		curv_label = "abs(c3)+abs(c4)"
+	else
+		return crosscorr, DataFrame()
+	end
+
+	joined0 = innerjoin(select(fp, :datetime, curv_col), co2; on=:datetime)
+	curv = _safe_float.(joined0[!, curv_col])
+	fc = _safe_float.(joined0[!, "VAR_EDDY.F_c"])
+	ok = .!isnan.(curv) .& .!isnan.(fc)
+	curv = curv[ok]
+	fc = fc[ok]
+	if length(curv) < 10
+		return crosscorr, DataFrame()
+	end
+
+	abs_fc = abs.(fc)
+	near_zero_threshold = quantile(abs_fc, 0.10)
+	near_zero = abs_fc .<= near_zero_threshold
+	curv_near_zero = curv[near_zero]
+	if isempty(curv_near_zero)
+		return crosscorr, DataFrame()
+	end
+
+	curv_summary = DataFrame(
+		metric=["curvature_metric", "near_zero_abs_fc_threshold", "n_points", "n_near_zero", "curvature_median_at_near_zero", "curvature_p10_at_near_zero", "curvature_p90_at_near_zero"],
+		value=Any[
+			curv_label,
+			near_zero_threshold,
+			length(curv),
+			sum(near_zero),
+			median(curv_near_zero),
+			quantile(curv_near_zero, 0.10),
+			quantile(curv_near_zero, 0.90),
+		],
+	)
+	CSV.write(joinpath(out_dir, "curvature_at_near_zero_fc_summary.csv"), curv_summary)
+
+	p2 = scatter(curv, fc; markersize=2.8, alpha=0.35, color=:gray, label="all")
+	scatter!(p2, curv[near_zero], fc[near_zero]; markersize=3.2, alpha=0.7, color=:red, label="near-zero |F_c|")
+	vline!(p2, [median(curv_near_zero)]; color=:red, linestyle=:dash, label="median curv @ near-zero")
+	hline!(p2, [0.0]; color=:black, linestyle=:dot, label="")
+	xlabel!(p2, curv_label)
+	ylabel!(p2, "VAR_EDDY.F_c")
+	title!(p2, "Curvature vs CO2 flux (near-zero threshold = $(round(near_zero_threshold, sigdigits=4)))")
+	savefig(p2, joinpath(out_dir, "plot_curvature_vs_fc_near_zero.png"))
+
+	return crosscorr, curv_summary
+end
+
 function process_file(csv_path::String)
 	stem = replace(basename(csv_path), ".csv" => "")
 	out_dir = joinpath(OUT_DIR, stem)
@@ -346,6 +492,8 @@ function process_file(csv_path::String)
 			fingerprints=0,
 			stable_events=0,
 			stable_fraction=0.0,
+			crosscorr_rows=0,
+			curvature_summary_rows=0,
 			out_dir=out_dir,
 			report=joinpath(out_dir, "report.md"),
 		)
@@ -361,7 +509,30 @@ function process_file(csv_path::String)
 	CSV.write(joinpath(out_dir, "stability_counts.csv"), counts)
 	CSV.write(joinpath(out_dir, "diagnostics_summary.csv"), coef_stats)
 	save_standard_plots(out_dir, fingerprints, counts, stem)
+
+	# Optional cross-correlation output for the temperature profile against CO2 flux.
+	crosscorr_rows = 0
+	curv_summary_rows = 0
+	if occursin("temperature_profile", lowercase(stem))
+		co2_stem = replace(stem, "temperature_profile" => "co2_tracers")
+		co2_csv_path = joinpath(dirname(csv_path), co2_stem * ".csv")
+		crosscorr_df, curv_df = _crosscorr_temp_vs_fc(out_dir, stem, fingerprints, co2_csv_path)
+		crosscorr_rows = nrow(crosscorr_df)
+		curv_summary_rows = nrow(curv_df)
+	end
+
 	write_file_report(out_dir, stem, basename(csv_path), profile_cols, heights, profile_source, height_source, raw_df, fingerprints, stable_events, counts, coef_stats)
+	if crosscorr_rows > 0
+		open(joinpath(out_dir, "report.md"), "a") do io
+			write(io, "\n## Cross-Correlation (Temperature DCT vs CO2 Flux)\n\n")
+			write(io, "- crosscorr_temp_vs_fc.csv\n")
+			write(io, "- plot_crosscorr_temp_vs_fc.png\n")
+			if curv_summary_rows > 0
+				write(io, "- curvature_at_near_zero_fc_summary.csv\n")
+				write(io, "- plot_curvature_vs_fc_near_zero.png\n")
+			end
+		end
+	end
 
 	stable_fraction = nrow(stable_events) / max(nrow(fingerprints), 1)
 	return (
@@ -376,6 +547,8 @@ function process_file(csv_path::String)
 		fingerprints=nrow(fingerprints),
 		stable_events=nrow(stable_events),
 		stable_fraction=stable_fraction,
+		crosscorr_rows=crosscorr_rows,
+		curvature_summary_rows=curv_summary_rows,
 		out_dir=out_dir,
 		report=joinpath(out_dir, "report.md"),
 	)
@@ -467,6 +640,8 @@ for csv_path in inputs
 			fingerprints=0,
 			stable_events=0,
 			stable_fraction=0.0,
+			crosscorr_rows=0,
+			curvature_summary_rows=0,
 			out_dir=out_dir,
 			report=joinpath(out_dir, "report.md"),
 		))

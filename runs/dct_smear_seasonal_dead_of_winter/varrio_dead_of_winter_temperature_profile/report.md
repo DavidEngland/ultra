@@ -32,3 +32,10 @@
 - plot_stability_counts.png
 - plot_shape_ratio_vs_zeta.png
 - plot_coeff_distributions.png
+
+## Cross-Correlation (Temperature DCT vs CO2 Flux)
+
+- crosscorr_temp_vs_fc.csv
+- plot_crosscorr_temp_vs_fc.png
+- curvature_at_near_zero_fc_summary.csv
+- plot_curvature_vs_fc_near_zero.png

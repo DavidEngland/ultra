@@ -38,6 +38,17 @@ SHEBA provenance and checksums are documented in:
 - docs/reports/SHEBA_Data_Provenance_and_Runbook_2026-05-03.md
 - data/sheba/raw/SHA256SUMS.txt
 
+## Git Hygiene and Data Tracking
+
+Repository ignore rules are defined in `.gitignore` to avoid uploading large, regenerable run outputs.
+
+Data retention policy:
+- Keep SHEBA raw text assets: `data/sheba/raw/*.txt`
+- Keep SHEBA processed tables: `data/sheba/processed/*.csv`
+- Ignore other files in those two SHEBA folders unless explicitly needed
+
+For release-style change history, see `CHANGELOG.md`.
+
 ## Notes
 
 This repository was seeded from a larger ABL workspace to isolate the ultraspherical workstream and make reruns easier for external users.
