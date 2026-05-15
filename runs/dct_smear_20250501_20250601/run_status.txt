@@ -1,7 +1,8 @@
 status=no_fingerprints
-started=2026-05-14T13:23:16.331
-finished=2026-05-14T13:28:56.898
+started=2026-05-15T10:51:46.610
+finished=2026-05-15T10:57:31.634
 fetch_source=metadata_tdry
+flux_source=fetched
 raw_rows=44640
 profiles=0
 fingerprints=0
