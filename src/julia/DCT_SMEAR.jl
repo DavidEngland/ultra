@@ -79,6 +79,19 @@ function _rolling_corr(x::Vector{Float64}, y::Vector{Float64}, window::Int)
 	return out
 end
 
+function infer_station_label(raw_df::DataFrame, input_csv::String)
+	name_vec = String.(names(raw_df))
+	path_lc = lowercase(input_csv)
+
+	if any(c -> startswith(c, "HYY_"), name_vec) || occursin("hyy", path_lc) || occursin("hyyti", path_lc)
+		return "Hyytiälä"
+	end
+	if any(c -> startswith(c, "VAR_"), name_vec) || occursin("varrio", path_lc) || occursin("vrr", path_lc)
+		return "Värriö"
+	end
+	return "SMEAR"
+end
+
 function fetch_interaction_flux(start_dt::DateTime, end_dt::DateTime)
 	# Tier-3 covariance variables for dynamic coupling diagnostics.
 	vars = unique(vcat(
@@ -271,7 +284,15 @@ function load_temperature_input_csv(path::AbstractString)
 		df.datetime = DateTime.(string.(df.datetime))
 	end
 
+	if Symbol("VAR_EDDY.MO_length") in names(df) && !( :L_obukhov in propertynames(df) )
+		df.L_obukhov = df[!, Symbol("VAR_EDDY.MO_length")]
+	end
+	if Symbol("VAR_EDDY.u_star") in names(df) && !( :ustar in propertynames(df) )
+		df.ustar = df[!, Symbol("VAR_EDDY.u_star")]
+	end
+
 	metadata_cols = ["VAR_META.TDRY4", "VAR_META.TDRY3", "VAR_META.TDRY2", "VAR_META.TDRY1", "VAR_META.TDRY0"]
+	metadata_heights = [2.2, 4.4, 6.6, 9.0, 15.0]
 	legacy_cols = [
 		SmearPipeline.VAR_VARS[:T_2m],
 		SmearPipeline.VAR_VARS[:T_4m],
@@ -279,14 +300,31 @@ function load_temperature_input_csv(path::AbstractString)
 		SmearPipeline.VAR_VARS[:T_9m],
 		SmearPipeline.VAR_VARS[:T_15m],
 	]
+	legacy_heights = SmearPipeline.VAR_HEIGHTS[:T]
 
-	if all(c -> c in names(df), metadata_cols)
-		return df, metadata_cols, [2.2, 4.4, 6.6, 9.0, 15.0], "preprocessed_csv:metadata_tdry"
-	elseif all(c -> c in names(df), legacy_cols)
-		return df, legacy_cols, SmearPipeline.VAR_HEIGHTS[:T], "preprocessed_csv:legacy_aliases"
+	function _keep_available(cols::Vector{String}, heights::Vector{Float64})
+		kept_cols = String[]
+		kept_heights = Float64[]
+		for (c, h) in zip(cols, heights)
+			c in names(df) || continue
+			vals = _safe_float.(df[!, c])
+			any(v -> !isnan(v), vals) || continue
+			push!(kept_cols, c)
+			push!(kept_heights, h)
+		end
+		return kept_cols, kept_heights
 	end
 
-	error("Input CSV missing required temperature profile columns for DCT_SMEAR: $(path)")
+	meta_cols, meta_heights = _keep_available(metadata_cols, metadata_heights)
+	legacy_cols_kept, legacy_heights_kept = _keep_available(legacy_cols, legacy_heights)
+
+	if length(meta_cols) >= 3
+		return df, meta_cols, meta_heights, "preprocessed_csv:metadata_tdry_dynamic"
+	elseif length(legacy_cols_kept) >= 3
+		return df, legacy_cols_kept, legacy_heights_kept, "preprocessed_csv:legacy_aliases_dynamic"
+	end
+
+	error("Input CSV missing sufficient usable temperature profile columns for DCT_SMEAR (need >=3 with non-missing values): $(path)")
 end
 
 
@@ -308,6 +346,7 @@ else
 end
 _normalize_datetime!(raw_df)
 raw_df, flux_source = ensure_interaction_columns(raw_df, input_csv)
+station_label = infer_station_label(raw_df, input_csv)
 
 # 2. Build 30-min median profiles (Värriö mast temperature profile)
 profiles = build_vertical_profiles(raw_df, :T; col_names=t_cols, heights=t_heights)
@@ -432,7 +471,7 @@ if hasproperty(fingerprints, :c1) && hasproperty(fingerprints, :c3)
 		alpha=0.7,
 		xlabel="c3 / c1",
 		ylabel="Density",
-		title="Distribution of c3/c1 (Värriö)",
+		title="Distribution of c3/c1 ($(station_label))",
 		legend=false,
 	)
 	savefig(p_c3c1, joinpath(OUT_DIR, "plot_c3_c1_hist.png"))
@@ -448,7 +487,7 @@ if hasproperty(fingerprints, :c1) && hasproperty(fingerprints, :c3)
 		markersize=2.5,
 		xlabel="c1",
 		ylabel="c3",
-		title="Phase Portrait: c1 vs c3 (Värriö)",
+		title="Phase Portrait: c1 vs c3 ($(station_label))",
 		legend=false,
 	)
 	savefig(p_phase, joinpath(OUT_DIR, "plot_phase_c1_c3.png"))

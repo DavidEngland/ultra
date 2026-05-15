@@ -1,0 +1,13 @@
+status=ok
+started=2026-05-15T14:51:36.880
+finished=2026-05-15T14:51:48.020
+fetch_source=preprocessed_csv:metadata_tdry_dynamic
+flux_source=embedded
+raw_rows=1440
+profiles=1261
+fingerprints=1261
+stable_events=0
+interaction_rows=1261
+rolling_corr_rows=1255
+rib_summary_rows=0
+report=runs/hyy_station2_ri_curvature_tier1/dct/2023_11/report.md

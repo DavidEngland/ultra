@@ -1,0 +1,4 @@
+status=running
+started=2026-05-15T14:54:17.762
+out_dir=runs/hyy_station2_ri_curvature_tier1/dct/2024_11
+time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00

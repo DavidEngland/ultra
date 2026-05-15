@@ -328,10 +328,14 @@ function build_vertical_profiles(
         valid || continue
 
         # Stability parameter ζ = z_ref / L_obukhov (reference height = 23m canopy top)
-        zeta  = :L_obukhov in propertynames(grp) ?
-                    _nanmedian(grp.L_obukhov) |> L -> isnan(L) ? NaN : 23.0 / L :
-                    NaN
-        ustar = :ustar in propertynames(grp) ? _nanmedian(grp.ustar) : NaN
+        l_col = _first_present_col(grp, [:L_obukhov, Symbol("VAR_EDDY.MO_length")])
+        u_col = _first_present_col(grp, [:ustar, Symbol("VAR_EDDY.u_star")])
+
+        zeta = isnothing(l_col) ? NaN : begin
+            L = _nanmedian(grp[!, l_col])
+            isnan(L) || abs(L) < 1e-9 ? NaN : 23.0 / L
+        end
+        ustar = isnothing(u_col) ? NaN : _nanmedian(grp[!, u_col])
 
         push!(profiles, (
             datetime = win.window,
@@ -364,6 +368,13 @@ function _nanmedian(v)
         push!(vals, Float64(x))
     end
     return isempty(vals) ? NaN : median(vals)
+end
+
+function _first_present_col(df, candidates::Vector{Symbol})
+    for col in candidates
+        col in propertynames(df) && return col
+    end
+    return nothing
 end
 
 # ─────────────────────────────────────────────

@@ -1,0 +1,6 @@
+metric,value
+rows,1488
+from,2021-12-01T00:00:00
+to,2022-01-01T00:00:00
+aggregation,ARITHMETIC
+quality,ANY

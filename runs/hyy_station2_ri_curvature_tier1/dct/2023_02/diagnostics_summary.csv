@@ -1,0 +1,10 @@
+metric,value
+n_profiles,1344.0
+n_stable,0.0
+stable_fraction,0.0
+mean_c2,-0.09279089045533961
+mean_c3,-0.020889700034936457
+mean_shape_ratio,0.4682141150714485
+median_ustar,NaN
+fetch_source,NaN
+flux_source,NaN

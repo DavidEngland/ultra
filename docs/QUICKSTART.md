@@ -102,6 +102,28 @@ SMEAR preprocessing template:
 julia --project=. src/julia/preprocess_tower_to_ultra_input.jl HYY runs/smear/input/hyy_input.csv 24.0 0.0 --mode=api-smear --profile-mode=two-level --from=2018-01-01T00:00:00 --to=2018-02-01T00:00:00 --interval=30 --aggregation=ARITHMETIC --quality=ANY --tv-uw=HYY_EDDY233.uw --tv-vw=HYY_EDDY233.vw --tv-wthetav=HYY_EDDY233.wtheta_v --tv-thetav=HYY_EDDY233.theta_v --tv-u1=HYY_META.WSU168 --tv-u2=HYY_EDDY233.U --tv-theta1=HYY_META.T168 --tv-theta2=HYY_EDDY233.av_t --z1=16.8 --z2=24.0 --phi=phi_m --stable-only
 ```
 
+Hyytiälä (station 2) DCT adapter run (single window):
+
+```bash
+julia --project=. src/julia/hyy_station2_to_dct_input.jl \
+  --from=2021-01-01T00:00:00 \
+  --to=2021-02-01T00:00:00 \
+  --out=runs/hyy_station2/input/hyy_station2_2021_01_dct_input.csv \
+  --aggregation=ARITHMETIC \
+  --quality=ANY
+
+DCT_SMEAR_INPUT_CSV="runs/hyy_station2/input/hyy_station2_2021_01_dct_input.csv" \
+DCT_SMEAR_OUT_DIR="runs/hyy_station2/dct/2021_01" \
+DCT_SMEAR_FETCH_INTERACTION_FLUX=false \
+julia --project=. -e 'include("src/julia/DCT_SMEAR.jl")'
+```
+
+Hyytiälä (station 2) winter matrix run (2021-2025):
+
+```bash
+bash scripts/run_smear_hyy_station2_winter_matrix.sh 2021 2025 hyy_station2_ri_curvature_tier1
+```
+
 ## 5) Troubleshooting
 
 - If you get SmartSMEAR 400 variable errors, verify tablevariable names in [data/smear/vars.json](data/smear/vars.json).
