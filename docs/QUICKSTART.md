@@ -124,6 +124,24 @@ Hyytiälä (station 2) winter matrix run (2021-2025):
 bash scripts/run_smear_hyy_station2_winter_matrix.sh 2021 2025 hyy_station2_ri_curvature_tier1
 ```
 
+Continue on per-month failures:
+
+```bash
+bash scripts/run_smear_hyy_station2_winter_matrix.sh 2021 2025 hyy_station2_ri_curvature_tier1 true
+```
+
+Värriö (station 1) winter matrix run (2020-2024):
+
+```bash
+bash scripts/run_smear_varrio_station1_winter_matrix.sh 2020 2024 varrio_station1_ri_curvature_tier1
+```
+
+Continue on per-month failures:
+
+```bash
+bash scripts/run_smear_varrio_station1_winter_matrix.sh 2020 2024 varrio_station1_ri_curvature_tier1 true
+```
+
 ## 5) Troubleshooting
 
 - If you get SmartSMEAR 400 variable errors, verify tablevariable names in [data/smear/vars.json](data/smear/vars.json).

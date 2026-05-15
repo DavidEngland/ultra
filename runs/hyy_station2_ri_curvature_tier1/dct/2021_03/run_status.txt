@@ -1,12 +1,12 @@
 status=ok
-started=2026-05-15T14:45:42.318
-finished=2026-05-15T14:45:53.402
+started=2026-05-15T15:34:08.325
+finished=2026-05-15T15:34:19.242
 fetch_source=preprocessed_csv:metadata_tdry_dynamic
 flux_source=embedded
 raw_rows=1488
 profiles=1440
 fingerprints=1440
-stable_events=0
+stable_events=362
 interaction_rows=1440
 rolling_corr_rows=1434
 rib_summary_rows=0

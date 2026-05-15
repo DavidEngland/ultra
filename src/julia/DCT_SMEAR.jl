@@ -10,14 +10,25 @@ using Printf
 using Statistics
 include(joinpath(@__DIR__, "compute_bulk_richardson.jl"))
 
-const START_DT = DateTime(2025, 5, 1)
-const END_DT   = DateTime(2025, 6, 1)
+function _datetime_env(key::String, default_dt::DateTime)
+	raw = get(ENV, key, "")
+	isempty(raw) && return default_dt
+	try
+		return DateTime(raw)
+	catch
+		error("Invalid DateTime for $(key): $(raw). Expected ISO format, e.g., 2020-02-01T00:00:00")
+	end
+end
+
+const START_DT = _datetime_env("DCT_SMEAR_START_DT", DateTime(2025, 5, 1))
+const END_DT   = _datetime_env("DCT_SMEAR_END_DT", DateTime(2025, 6, 1))
 const DEFAULT_OUT_DIR = joinpath(@__DIR__, "..", "..", "runs", "dct_smear_20250501_20250601")
 const OUT_DIR  = get(ENV, "DCT_SMEAR_OUT_DIR", DEFAULT_OUT_DIR)
 const STATUS_PATH = joinpath(OUT_DIR, "run_status.txt")
 const ROLLING_WINDOW = parse(Int, get(ENV, "DCT_SMEAR_ROLLING_WINDOW", "6"))
 const QC_MAX = parse(Int, get(ENV, "DCT_SMEAR_QC_MAX", "1"))
 const FETCH_INTERACTION_FLUX = lowercase(get(ENV, "DCT_SMEAR_FETCH_INTERACTION_FLUX", "true")) == "true"
+START_DT < END_DT || error("DCT_SMEAR_START_DT must be earlier than DCT_SMEAR_END_DT")
 mkpath(OUT_DIR)
 
 write_status(lines::Vector{String}) = open(STATUS_PATH, "w") do io
@@ -429,22 +440,53 @@ p_counts = bar(
 	counts.count;
 	xlabel="Stability class",
 	ylabel="Count",
-	title="DCT-SMEAR Stability Regime Counts (May 2025)",
+	title="DCT-SMEAR Stability Regime Counts ($(station_label))",
 	legend=false,
 )
 savefig(p_counts, joinpath(OUT_DIR, "plot_stability_counts.png"))
 
 valid_shape = .!isnan.(fingerprints.zeta) .& .!isnan.(fingerprints.shape_ratio)
-p_shape = scatter(
-	fingerprints.zeta[valid_shape],
-	fingerprints.shape_ratio[valid_shape];
-	markersize=2.0,
-	alpha=0.35,
-	xlabel="zeta",
-	ylabel="shape_ratio = |c3| / |c2|",
-	title="Curvature-to-Gradient Ratio vs Stability",
-	legend=false,
-)
+zeta_shape = _safe_float.(fingerprints.zeta[valid_shape])
+ratio_shape = _safe_float.(fingerprints.shape_ratio[valid_shape])
+finite_shape = .!isnan.(zeta_shape) .& .!isnan.(ratio_shape)
+zeta_shape = zeta_shape[finite_shape]
+ratio_shape = ratio_shape[finite_shape]
+
+if !isempty(ratio_shape)
+	y_cap = quantile(ratio_shape, 0.99)
+	y_cap = isfinite(y_cap) && y_cap > 0 ? y_cap : maximum(ratio_shape)
+	shape_keep = ratio_shape .<= y_cap
+	if sum(shape_keep) < 10
+		shape_keep .= true
+	end
+	z_plot = zeta_shape[shape_keep]
+	r_plot = ratio_shape[shape_keep]
+	z_lo = quantile(z_plot, 0.01)
+	z_hi = quantile(z_plot, 0.99)
+	z_lo, z_hi = z_lo < z_hi ? (z_lo, z_hi) : (minimum(z_plot), maximum(z_plot))
+
+	p_shape = scatter(
+		z_plot,
+		r_plot;
+		markersize=2.0,
+		alpha=0.35,
+		xlabel="zeta",
+		ylabel="shape_ratio = |c3| / |c2|",
+		title=@sprintf("Curvature-to-Gradient Ratio vs Stability (%s, p99 y=%.2f)", station_label, y_cap),
+		legend=false,
+	)
+	xlims!(p_shape, z_lo, z_hi)
+	ylims!(p_shape, 0.0, y_cap)
+	vline!(p_shape, [0.0]; color=:black, linestyle=:dash, label="")
+else
+	p_shape = scatter(
+		Float64[], Float64[];
+		xlabel="zeta",
+		ylabel="shape_ratio = |c3| / |c2|",
+		title="Curvature-to-Gradient Ratio vs Stability ($(station_label))",
+		legend=false,
+	)
+end
 savefig(p_shape, joinpath(OUT_DIR, "plot_shape_ratio_vs_zeta.png"))
 
 
@@ -464,32 +506,70 @@ savefig(p_coeff, joinpath(OUT_DIR, "plot_coeff_distributions.png"))
 # --- Plot c3/c1 ratio ---
 if hasproperty(fingerprints, :c1) && hasproperty(fingerprints, :c3)
 	valid_c1 = .!isnan.(fingerprints.c1) .& (abs.(fingerprints.c1) .> 1e-8)
-	c3_c1 = fingerprints.c3[valid_c1] ./ fingerprints.c1[valid_c1]
+	c3_c1 = _safe_float.(fingerprints.c3[valid_c1] ./ fingerprints.c1[valid_c1])
+	c3_c1 = c3_c1[.!isnan.(c3_c1)]
+
+	h_lo = quantile(c3_c1, 0.01)
+	h_hi = quantile(c3_c1, 0.99)
+	h_keep = (c3_c1 .>= h_lo) .& (c3_c1 .<= h_hi)
+	if sum(h_keep) < 10
+		h_keep .= true
+		h_lo, h_hi = minimum(c3_c1), maximum(c3_c1)
+	end
+	c3_c1_plot = c3_c1[h_keep]
 	p_c3c1 = histogram(
-		c3_c1;
+		c3_c1_plot;
 		bins=50,
 		alpha=0.7,
 		xlabel="c3 / c1",
 		ylabel="Density",
-		title="Distribution of c3/c1 ($(station_label))",
+		title=@sprintf("Distribution of c3/c1 (%s, 1-99%% range)", station_label),
 		legend=false,
 	)
+	xlims!(p_c3c1, h_lo, h_hi)
 	savefig(p_c3c1, joinpath(OUT_DIR, "plot_c3_c1_hist.png"))
 end
 
 # --- Phase portrait: c1 vs c3 ---
 if hasproperty(fingerprints, :c1) && hasproperty(fingerprints, :c3)
 	valid_phase = .!isnan.(fingerprints.c1) .& .!isnan.(fingerprints.c3)
+	c1_all = _safe_float.(fingerprints.c1[valid_phase])
+	c3_all = _safe_float.(fingerprints.c3[valid_phase])
 	p_phase = scatter(
-		fingerprints.c1[valid_phase],
-		fingerprints.c3[valid_phase];
+		c1_all,
+		c3_all;
+		color=:gray45,
 		alpha=0.5,
-		markersize=2.5,
+		markersize=2.0,
 		xlabel="c1",
 		ylabel="c3",
-		title="Phase Portrait: c1 vs c3 ($(station_label))",
+		title="Phase Portrait: c1 vs c3 ($(station_label), near-neutral highlighted)",
 		legend=false,
 	)
+	if hasproperty(fingerprints, :stability)
+		near_neutral = valid_phase .& (fingerprints.stability .== :near_neutral)
+		if any(near_neutral)
+			scatter!(
+				p_phase,
+				_safe_float.(fingerprints.c1[near_neutral]),
+				_safe_float.(fingerprints.c3[near_neutral]);
+				color=:dodgerblue,
+				alpha=0.7,
+				markersize=2.3,
+				label="",
+			)
+		end
+	end
+	x_lo = quantile(c1_all, 0.01)
+	x_hi = quantile(c1_all, 0.99)
+	y_lo = quantile(c3_all, 0.01)
+	y_hi = quantile(c3_all, 0.99)
+	if x_lo < x_hi && y_lo < y_hi
+		xlims!(p_phase, x_lo, x_hi)
+		ylims!(p_phase, y_lo, y_hi)
+	end
+	hline!(p_phase, [0.0]; color=:black, linestyle=:dash, label="")
+	vline!(p_phase, [0.0]; color=:black, linestyle=:dash, label="")
 	savefig(p_phase, joinpath(OUT_DIR, "plot_phase_c1_c3.png"))
 end
 

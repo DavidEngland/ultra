@@ -5,17 +5,22 @@
 - Interaction flux source: embedded
 - Raw rows fetched: 1392
 - Profiles fingerprinted: 1389
-- Stable events: 0 (0.0%)
+- Stable events: 166 (12.0%)
 
 ## Stability Counts
 
-- unknown: 1389
+- near_neutral: 787
+- unknown: 361
+- stable: 166
+- unstable: 65
+- strongly_stable: 6
+- strongly_unstable: 4
 
 ## Key Diagnostics
 
 - n_profiles: 1389
-- n_stable: 0
-- stable_fraction: 0
+- n_stable: 166
+- stable_fraction: 0.11951
 - mean_c2: -0.0993689
 - mean_c3: 0.00212783
 - mean_shape_ratio: 1.06119

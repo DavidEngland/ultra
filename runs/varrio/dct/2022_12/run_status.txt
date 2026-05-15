@@ -1,0 +1,4 @@
+status=running
+started=2026-05-15T17:56:56.595
+out_dir=runs/varrio/dct/2022_12
+time_range=2022-12-01T00:00:00 to 2023-01-01T00:00:00

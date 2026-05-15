@@ -1,7 +1,7 @@
 metric,value
 n_profiles,1354.0
-n_stable,0.0
-stable_fraction,0.0
+n_stable,213.0
+stable_fraction,0.15731166912850814
 mean_c2,-0.16831898382516725
 mean_c3,0.04769086254099724
 mean_shape_ratio,0.44442760387094443

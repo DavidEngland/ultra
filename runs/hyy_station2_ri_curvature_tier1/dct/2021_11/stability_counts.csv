@@ -1,2 +1,7 @@
 stability,count
-unknown,1440
+stable,359
+strongly_stable,275
+strongly_unstable,253
+unstable,247
+near_neutral,246
+unknown,60
