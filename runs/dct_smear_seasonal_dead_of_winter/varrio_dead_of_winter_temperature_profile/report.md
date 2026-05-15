@@ -39,3 +39,10 @@
 - plot_crosscorr_temp_vs_fc.png
 - curvature_at_near_zero_fc_summary.csv
 - plot_curvature_vs_fc_near_zero.png
+
+## Bulk Richardson (Ri_b) vs DCT Curvature
+
+- rib_fingerprint_joined.csv
+- rib_laminar_events.csv (Ri_b > 0.25)
+- rib_diagnostics_summary.csv
+- plot_rib_vs_c3.png

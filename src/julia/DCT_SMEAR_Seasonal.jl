@@ -8,6 +8,7 @@ using JSON3
 using Plots
 using Printf
 using Statistics
+include(joinpath(@__DIR__, "compute_bulk_richardson.jl"))
 
 const DEFAULT_IN_DIR = joinpath(@__DIR__, "..", "..", "runs", "seasonal_varrio_station1", "dead_of_winter")
 const DEFAULT_OUT_DIR = joinpath(@__DIR__, "..", "..", "runs", "dct_smear_seasonal_dead_of_winter")
@@ -455,6 +456,174 @@ function _crosscorr_temp_vs_fc(out_dir::String, stem::String, fingerprints::Data
 	return crosscorr, curv_summary
 end
 
+function _aggregate_rib_by_window(df::DataFrame)
+	if isempty(df)
+		return DataFrame(datetime=DateTime[], rib=Float64[])
+	end
+	grouped = combine(groupby(df, :datetime), :rib => (v -> begin
+		x = filter(!isnan, _safe_float.(v))
+		isempty(x) ? NaN : median(x)
+	end) => :rib)
+	sort!(grouped, :datetime)
+	return grouped
+end
+
+function _rib_curvature_diagnostics(out_dir::String, stem::String, raw_df::DataFrame, fingerprints::DataFrame, wind_csv_path::String="", co2_csv_path::String="", momentum_csv_path::String="")
+	temp_required = ["VAR_META.TDRY4", "VAR_META.TDRY0"]
+	if !all(c -> c in names(raw_df), temp_required)
+		return DataFrame(), DataFrame()
+	end
+
+	# Build 30-min temperature aggregates first to guarantee joinable windows.
+	temp_base = select(raw_df, :datetime, "VAR_META.TDRY4", "VAR_META.TDRY0")
+	temp_base.datetime = floor.(temp_base.datetime, Minute(30))
+	temp_30 = combine(groupby(temp_base, :datetime),
+		"VAR_META.TDRY4" => (v -> begin
+			x = filter(!isnan, _safe_float.(v))
+			isempty(x) ? NaN : median(x)
+		end) => "VAR_META.TDRY4",
+		"VAR_META.TDRY0" => (v -> begin
+			x = filter(!isnan, _safe_float.(v))
+			isempty(x) ? NaN : median(x)
+		end) => "VAR_META.TDRY0",
+	)
+
+	# Wind-speed fallback hierarchy:
+	# 1) current file VAR_META.WS0
+	# 2) sibling wind_profile VAR_META.WS0..WS4
+	# 3) sibling momentum_flux VAR_EDDY.U
+	# 4) sibling co2_tracers VAR_EDDY.U
+	function _pick_ws_source(df::DataFrame, candidates::Vector{String})
+		for c in candidates
+			c in names(df) || continue
+			vals = _safe_float.(df[!, c])
+			any(.!isnan.(vals)) || continue
+			tmp = DataFrame(datetime=df.datetime, ws_ref=vals)
+			return tmp
+		end
+		return DataFrame()
+	end
+
+	ws_src = DataFrame()
+	if :datetime in propertynames(raw_df)
+		ws_src = _pick_ws_source(raw_df, ["VAR_META.WS0", "VAR_META.WS1", "VAR_META.WS2", "VAR_META.WS3", "VAR_META.WS4"])
+	end
+
+	if isempty(ws_src) && !isempty(wind_csv_path) && isfile(wind_csv_path)
+		wind_df = CSV.read(wind_csv_path, DataFrame; missingstring=["", "NaN", "NA"])
+		if :datetime in propertynames(wind_df)
+			normalize_datetime!(wind_df)
+			ws_src = _pick_ws_source(wind_df, ["VAR_META.WS0", "VAR_META.WS1", "VAR_META.WS2", "VAR_META.WS3", "VAR_META.WS4"])
+		end
+	end
+
+	if isempty(ws_src) && !isempty(momentum_csv_path) && isfile(momentum_csv_path)
+		mom_df = CSV.read(momentum_csv_path, DataFrame; missingstring=["", "NaN", "NA"])
+		if :datetime in propertynames(mom_df)
+			normalize_datetime!(mom_df)
+			ws_src = _pick_ws_source(mom_df, ["VAR_EDDY.U"])
+		end
+	end
+
+	if isempty(ws_src) && !isempty(co2_csv_path) && isfile(co2_csv_path)
+		co2_df = CSV.read(co2_csv_path, DataFrame; missingstring=["", "NaN", "NA"])
+		if :datetime in propertynames(co2_df)
+			normalize_datetime!(co2_df)
+			ws_src = _pick_ws_source(co2_df, ["VAR_EDDY.U"])
+		end
+	end
+
+	isempty(ws_src) && return DataFrame(), DataFrame()
+
+	ws_src.datetime = floor.(ws_src.datetime, Minute(30))
+	ws_30 = combine(groupby(ws_src, :datetime), :ws_ref => (v -> begin
+		x = filter(!isnan, _safe_float.(v))
+		isempty(x) ? NaN : median(x)
+	end) => :ws_ref)
+
+	rib_in = innerjoin(temp_30, ws_30; on=:datetime)
+	isempty(rib_in) && return DataFrame(), DataFrame()
+
+	rib_vals = compute_bulk_richardson(
+		rib_in,
+		2.2,
+		15.0,
+		Symbol("VAR_META.TDRY4"),
+		Symbol("VAR_META.TDRY0"),
+		:ws_ref,
+	)
+
+	rib_30 = DataFrame(datetime=rib_in.datetime, rib=_safe_float.(rib_vals))
+	rib_30 = _aggregate_rib_by_window(rib_30)
+	any(.!isnan.(rib_30.rib)) || return DataFrame(), DataFrame()
+
+	fp_cols = [c for c in [:datetime, :c2, :c3, :c4, :shape_ratio] if c in propertynames(fingerprints)]
+	fp = select(fingerprints, fp_cols)
+	fp.datetime = floor.(fp.datetime, Minute(30))
+	fp = combine(groupby(fp, :datetime), names(fp, Not(:datetime)) .=> (v -> begin
+		x = filter(!isnan, _safe_float.(v))
+		isempty(x) ? NaN : median(x)
+	end) .=> names(fp, Not(:datetime)))
+
+	joined = innerjoin(fp, rib_30; on=:datetime)
+	if isempty(joined)
+		return DataFrame(), DataFrame()
+	end
+
+	joined.rib = _safe_float.(joined.rib)
+	joined.c3 = "c3" in names(joined) ? _safe_float.(joined.c3) : fill(NaN, nrow(joined))
+	joined.shape_ratio = "shape_ratio" in names(joined) ? _safe_float.(joined.shape_ratio) : fill(NaN, nrow(joined))
+	joined.regime = ifelse.(joined.rib .> 0.25, "laminar_stable", "mixed_or_turbulent")
+
+	CSV.write(joinpath(out_dir, "rib_fingerprint_joined.csv"), joined)
+	CSV.write(joinpath(out_dir, "rib_laminar_events.csv"), filter(:regime => ==("laminar_stable"), joined))
+
+	valid = .!isnan.(joined.rib) .& .!isnan.(joined.c3)
+	if any(valid)
+		p = scatter(
+			joined.rib[valid],
+			joined.c3[valid];
+			markersize=3.0,
+			alpha=0.45,
+			xlabel="Bulk Richardson number (Ri_b)",
+			ylabel="c3",
+			title="Ri_b vs DCT Curvature c3: $(stem)",
+			legend=false,
+		)
+		vline!(p, [0.25]; color=:red, linestyle=:dash, label="Ri_b = 0.25")
+		savefig(p, joinpath(out_dir, "plot_rib_vs_c3.png"))
+	end
+
+	rib_ok = filter(!isnan, joined.rib)
+	lam = joined.rib .> 0.25
+	c3_lam = joined.c3[lam .& .!isnan.(joined.c3)]
+	c3_mix = joined.c3[.!lam .& .!isnan.(joined.c3)]
+
+	summary = DataFrame(
+		metric=[
+			"rib_window_count",
+			"rib_laminar_count",
+			"rib_laminar_fraction",
+			"rib_median",
+			"rib_p90",
+			"c3_median_laminar",
+			"c3_median_mixed_or_turbulent",
+		],
+		value=[
+			nrow(joined),
+			sum(lam),
+			sum(lam) / max(nrow(joined), 1),
+			isempty(rib_ok) ? NaN : median(rib_ok),
+			isempty(rib_ok) ? NaN : quantile(rib_ok, 0.90),
+			isempty(c3_lam) ? NaN : median(c3_lam),
+			isempty(c3_mix) ? NaN : median(c3_mix),
+		],
+	)
+	CSV.write(joinpath(out_dir, "rib_diagnostics_summary.csv"), summary)
+
+	return joined, summary
+end
+
 function process_file(csv_path::String)
 	stem = replace(basename(csv_path), ".csv" => "")
 	out_dir = joinpath(OUT_DIR, stem)
@@ -494,6 +663,8 @@ function process_file(csv_path::String)
 			stable_fraction=0.0,
 			crosscorr_rows=0,
 			curvature_summary_rows=0,
+			rib_rows=0,
+			rib_summary_rows=0,
 			out_dir=out_dir,
 			report=joinpath(out_dir, "report.md"),
 		)
@@ -513,12 +684,21 @@ function process_file(csv_path::String)
 	# Optional cross-correlation output for the temperature profile against CO2 flux.
 	crosscorr_rows = 0
 	curv_summary_rows = 0
+	rib_rows = 0
+	rib_summary_rows = 0
 	if occursin("temperature_profile", lowercase(stem))
 		co2_stem = replace(stem, "temperature_profile" => "co2_tracers")
+		wind_stem = replace(stem, "temperature_profile" => "wind_profile")
+		momentum_stem = replace(stem, "temperature_profile" => "momentum_flux")
 		co2_csv_path = joinpath(dirname(csv_path), co2_stem * ".csv")
+		wind_csv_path = joinpath(dirname(csv_path), wind_stem * ".csv")
+		momentum_csv_path = joinpath(dirname(csv_path), momentum_stem * ".csv")
 		crosscorr_df, curv_df = _crosscorr_temp_vs_fc(out_dir, stem, fingerprints, co2_csv_path)
 		crosscorr_rows = nrow(crosscorr_df)
 		curv_summary_rows = nrow(curv_df)
+		rib_df, rib_summary_df = _rib_curvature_diagnostics(out_dir, stem, raw_df, fingerprints, wind_csv_path, co2_csv_path, momentum_csv_path)
+		rib_rows = nrow(rib_df)
+		rib_summary_rows = nrow(rib_summary_df)
 	end
 
 	write_file_report(out_dir, stem, basename(csv_path), profile_cols, heights, profile_source, height_source, raw_df, fingerprints, stable_events, counts, coef_stats)
@@ -531,6 +711,15 @@ function process_file(csv_path::String)
 				write(io, "- curvature_at_near_zero_fc_summary.csv\n")
 				write(io, "- plot_curvature_vs_fc_near_zero.png\n")
 			end
+		end
+	end
+	if rib_rows > 0
+		open(joinpath(out_dir, "report.md"), "a") do io
+			write(io, "\n## Bulk Richardson (Ri_b) vs DCT Curvature\n\n")
+			write(io, "- rib_fingerprint_joined.csv\n")
+			write(io, "- rib_laminar_events.csv (Ri_b > 0.25)\n")
+			write(io, "- rib_diagnostics_summary.csv\n")
+			write(io, "- plot_rib_vs_c3.png\n")
 		end
 	end
 
@@ -549,6 +738,8 @@ function process_file(csv_path::String)
 		stable_fraction=stable_fraction,
 		crosscorr_rows=crosscorr_rows,
 		curvature_summary_rows=curv_summary_rows,
+		rib_rows=rib_rows,
+		rib_summary_rows=rib_summary_rows,
 		out_dir=out_dir,
 		report=joinpath(out_dir, "report.md"),
 	)
@@ -642,6 +833,8 @@ for csv_path in inputs
 			stable_fraction=0.0,
 			crosscorr_rows=0,
 			curvature_summary_rows=0,
+			rib_rows=0,
+			rib_summary_rows=0,
 			out_dir=out_dir,
 			report=joinpath(out_dir, "report.md"),
 		))
