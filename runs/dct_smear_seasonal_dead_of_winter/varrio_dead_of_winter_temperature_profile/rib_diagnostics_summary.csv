@@ -1,0 +1,8 @@
+metric,value
+rib_window_count,96.0
+rib_laminar_count,0.0
+rib_laminar_fraction,0.0
+rib_median,0.00838087616933883
+rib_p90,0.027426452765903095
+c3_median_laminar,NaN
+c3_median_mixed_or_turbulent,0.032236664448854147

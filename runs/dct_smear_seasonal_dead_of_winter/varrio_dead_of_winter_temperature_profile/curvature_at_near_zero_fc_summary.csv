@@ -1,0 +1,8 @@
+metric,value
+curvature_metric,shape_ratio
+near_zero_abs_fc_threshold,0.10944000000000001
+n_points,74
+n_near_zero,8
+curvature_median_at_near_zero,0.4092678896893994
+curvature_p10_at_near_zero,0.2883252171560278
+curvature_p90_at_near_zero,1.1212618884220642

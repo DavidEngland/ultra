@@ -14,8 +14,8 @@
 # Binary artifacts
 *.jld2
 
-# Generated seasonal run outputs (large/regenerable)
-runs/
+# Generated run plot artifacts (large/regenerable)
+runs/**/*.png
 
 # Keep SHEBA curated deliverables only
 # raw: keep plaintext source/checksum files
