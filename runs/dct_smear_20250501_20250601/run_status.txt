@@ -1,6 +1,6 @@
 status=no_fingerprints
-started=2026-05-15T15:11:21.991
-finished=2026-05-15T15:17:05.144
+started=2026-05-17T10:34:01.017
+finished=2026-05-17T10:39:47.124
 fetch_source=metadata_tdry
 flux_source=fetched
 raw_rows=44640

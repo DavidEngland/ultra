@@ -1,0 +1,13 @@
+status=ok
+started=2026-05-15T22:04:54.291
+finished=2026-05-15T23:39:31.987
+fetch_source=metadata_tdry
+flux_source=fetched
+raw_rows=44640
+profiles=1439
+fingerprints=1439
+stable_events=197
+interaction_rows=1439
+rolling_corr_rows=1433
+rib_summary_rows=0
+report=runs/varrio/dct/2024_01/report.md

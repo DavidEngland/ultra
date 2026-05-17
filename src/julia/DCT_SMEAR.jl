@@ -1,7 +1,9 @@
 include(joinpath(@__DIR__, "SmearPipeline.jl"))
 include(joinpath(@__DIR__, "SMEARVarLookup.jl"))
+include(joinpath(@__DIR__, "C1C3Diagnostics.jl"))
 using .SmearPipeline
 using .SMEARVarLookup
+using .C1C3Diagnostics
 using CSV
 using DataFrames
 using Dates
@@ -44,6 +46,7 @@ function remove_stale_plots()
 		joinpath(OUT_DIR, "plot_coeff_distributions.png"),
 		joinpath(OUT_DIR, "plot_c3_c1_hist.png"),
 		joinpath(OUT_DIR, "plot_phase_c1_c3.png"),
+		joinpath(OUT_DIR, "plot_c1_c3_trend.png"),
 		joinpath(OUT_DIR, "plot_c3_vs_co2_storage_flux.png"),
 		joinpath(OUT_DIR, "plot_c3_vs_f_c.png"),
 		joinpath(OUT_DIR, "plot_rolling_corr_H_tau.png"),
@@ -431,6 +434,7 @@ coef_stats = DataFrame(
 CSV.write(joinpath(OUT_DIR, "diagnostics_summary.csv"), coef_stats)
 
 interaction_df, rolling_df, rib_summary = interaction_diagnostics(raw_df, fingerprints)
+c1_c3_summary = emit_c1_c3_diagnostics(OUT_DIR, fingerprints, station_label)
 
 # 6. Plots
 default(size=(1100, 700), dpi=140)
@@ -502,76 +506,6 @@ p_coeff = histogram(
 	title="Spectral Coefficient Distributions",
 )
 savefig(p_coeff, joinpath(OUT_DIR, "plot_coeff_distributions.png"))
-
-# --- Plot c3/c1 ratio ---
-if hasproperty(fingerprints, :c1) && hasproperty(fingerprints, :c3)
-	valid_c1 = .!isnan.(fingerprints.c1) .& (abs.(fingerprints.c1) .> 1e-8)
-	c3_c1 = _safe_float.(fingerprints.c3[valid_c1] ./ fingerprints.c1[valid_c1])
-	c3_c1 = c3_c1[.!isnan.(c3_c1)]
-
-	h_lo = quantile(c3_c1, 0.01)
-	h_hi = quantile(c3_c1, 0.99)
-	h_keep = (c3_c1 .>= h_lo) .& (c3_c1 .<= h_hi)
-	if sum(h_keep) < 10
-		h_keep .= true
-		h_lo, h_hi = minimum(c3_c1), maximum(c3_c1)
-	end
-	c3_c1_plot = c3_c1[h_keep]
-	p_c3c1 = histogram(
-		c3_c1_plot;
-		bins=50,
-		alpha=0.7,
-		xlabel="c3 / c1",
-		ylabel="Density",
-		title=@sprintf("Distribution of c3/c1 (%s, 1-99%% range)", station_label),
-		legend=false,
-	)
-	xlims!(p_c3c1, h_lo, h_hi)
-	savefig(p_c3c1, joinpath(OUT_DIR, "plot_c3_c1_hist.png"))
-end
-
-# --- Phase portrait: c1 vs c3 ---
-if hasproperty(fingerprints, :c1) && hasproperty(fingerprints, :c3)
-	valid_phase = .!isnan.(fingerprints.c1) .& .!isnan.(fingerprints.c3)
-	c1_all = _safe_float.(fingerprints.c1[valid_phase])
-	c3_all = _safe_float.(fingerprints.c3[valid_phase])
-	p_phase = scatter(
-		c1_all,
-		c3_all;
-		color=:gray45,
-		alpha=0.5,
-		markersize=2.0,
-		xlabel="c1",
-		ylabel="c3",
-		title="Phase Portrait: c1 vs c3 ($(station_label), near-neutral highlighted)",
-		legend=false,
-	)
-	if hasproperty(fingerprints, :stability)
-		near_neutral = valid_phase .& (fingerprints.stability .== :near_neutral)
-		if any(near_neutral)
-			scatter!(
-				p_phase,
-				_safe_float.(fingerprints.c1[near_neutral]),
-				_safe_float.(fingerprints.c3[near_neutral]);
-				color=:dodgerblue,
-				alpha=0.7,
-				markersize=2.3,
-				label="",
-			)
-		end
-	end
-	x_lo = quantile(c1_all, 0.01)
-	x_hi = quantile(c1_all, 0.99)
-	y_lo = quantile(c3_all, 0.01)
-	y_hi = quantile(c3_all, 0.99)
-	if x_lo < x_hi && y_lo < y_hi
-		xlims!(p_phase, x_lo, x_hi)
-		ylims!(p_phase, y_lo, y_hi)
-	end
-	hline!(p_phase, [0.0]; color=:black, linestyle=:dash, label="")
-	vline!(p_phase, [0.0]; color=:black, linestyle=:dash, label="")
-	savefig(p_phase, joinpath(OUT_DIR, "plot_phase_c1_c3.png"))
-end
 
 # --- Interaction plots: c3 vs tracer flux and rolling H-tau coupling ---
 if !isempty(interaction_df) && all(c -> c in names(interaction_df), ["c3", "VAR_EDDY.CO2_storage_flux"])
@@ -662,15 +596,26 @@ open(report_path, "w") do io
 	for row in eachrow(coef_stats)
 		write(io, @sprintf("- %s: %.6g\n", row.metric, row.value))
 	end
+	if !isempty(c1_c3_summary)
+		write(io, "\n## c1-c3 Relationship\n\n")
+		for row in eachrow(c1_c3_summary)
+			write(io, @sprintf("- %s: n=%d, corr=%.4f, slope=%.4f, intercept=%.4f, mean(c1)=%.4f, mean(c3)=%.4f, skew(c1)=%.4f, skew(c3)=%.4f\n",
+				row.subset, row.n, row.corr_c1_c3, row.slope_c3_on_c1, row.intercept_c3_on_c1, row.mean_c1, row.mean_c3, row.skew_c1, row.skew_c3))
+		end
+	end
 
 	write(io, "\n## Output Files\n\n")
 	write(io, "- fingerprints.csv\n")
 	write(io, "- stable_events.csv\n")
 	write(io, "- stability_counts.csv\n")
 	write(io, "- diagnostics_summary.csv\n")
+	write(io, "- c1_c3_relationship_summary.csv\n")
 	write(io, "- plot_stability_counts.png\n")
 	write(io, "- plot_shape_ratio_vs_zeta.png\n")
 	write(io, "- plot_coeff_distributions.png\n")
+	write(io, "- plot_c3_c1_hist.png\n")
+	write(io, "- plot_phase_c1_c3.png\n")
+	write(io, "- plot_c1_c3_trend.png\n")
 	if !isempty(interaction_df)
 		write(io, "- interaction_joined.csv\n")
 		if isfile(joinpath(OUT_DIR, "interaction_rolling_corr.csv"))

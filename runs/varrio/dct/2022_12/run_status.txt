@@ -1,4 +1,13 @@
-status=running
+status=ok
 started=2026-05-15T17:56:56.595
-out_dir=runs/varrio/dct/2022_12
-time_range=2022-12-01T00:00:00 to 2023-01-01T00:00:00
+finished=2026-05-15T18:28:18.704
+fetch_source=metadata_tdry
+flux_source=fetched
+raw_rows=44640
+profiles=1487
+fingerprints=1487
+stable_events=92
+interaction_rows=1487
+rolling_corr_rows=1481
+rib_summary_rows=0
+report=runs/varrio/dct/2022_12/report.md

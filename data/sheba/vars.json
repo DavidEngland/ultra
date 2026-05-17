@@ -1,0 +1,715 @@
+{
+  "dataset": {
+    "id": "SHEBA_ASFG3.0",
+    "name": "SHEBA Atmospheric Surface Flux Group hourly tower data",
+    "site": "Met City, SHEBA ice camp",
+    "version": "ASFG3.0",
+    "frequency": "hourly",
+    "notes": [
+      "Catalog derived from data/sheba/raw/readme_ASFG3.0.txt and the headers of main_file6_hd.txt and prof_file_all6_ed_hd.txt.",
+      "Use normalized column names when reading with CSV.jl normalizenames=true; dots and asterisks are converted to underscores.",
+      "The prof_file_all6_ed_hd.txt level families 1-5 should be interpreted together with z1-z5, which provide the actual measurement heights."
+    ]
+  },
+  "sources": [
+    {
+      "id": "main_file6_hd",
+      "path": "data/sheba/raw/main_file6_hd.txt",
+      "description": "Two-level hourly ASFG file derived from the 5-level profile file by interpolating temperature, humidity, and wind to 2.5 m and 10 m and by adding bulk flux estimates.",
+      "categories": [
+        {
+          "id": "time_location",
+          "name": "Time And Location",
+          "variables": [
+            {
+              "column": "JD",
+              "aliases": ["JJD"],
+              "title": "Julian day",
+              "plotLabel": "Julian day",
+              "unit": "UTC day since 1997-01-01",
+              "description": "Julian day counter used by the SHEBA ASFG files; Jan 1 1997 is day 1 and Jan 1 1998 is day 366."
+            },
+            {
+              "column": "lat",
+              "title": "Latitude",
+              "plotLabel": "Latitude",
+              "unit": "deg",
+              "description": "Platform latitude."
+            },
+            {
+              "column": "lon",
+              "title": "Longitude",
+              "plotLabel": "Longitude",
+              "unit": "deg",
+              "description": "Platform longitude."
+            },
+            {
+              "column": "Press",
+              "title": "Surface pressure",
+              "plotLabel": "Pressure",
+              "unit": "mb",
+              "description": "Observed surface pressure used in the ASFG processing and bulk flux calculations."
+            }
+          ]
+        },
+        {
+          "id": "two_level_profiles",
+          "name": "Two-Level Interpolated Profiles",
+          "variables": [
+            {
+              "column": "ws2_5",
+              "rawColumn": "ws2.5",
+              "title": "Wind speed at 2.5 m",
+              "plotLabel": "Wind speed (2.5 m)",
+              "unit": "m/s",
+              "description": "Interpolated hourly wind speed at 2.5 m."
+            },
+            {
+              "column": "ws10",
+              "title": "Wind speed at 10 m",
+              "plotLabel": "Wind speed (10 m)",
+              "unit": "m/s",
+              "description": "Interpolated hourly wind speed at 10 m."
+            },
+            {
+              "column": "wd2_5",
+              "rawColumn": "wd2.5",
+              "title": "Wind direction at 2.5 m",
+              "plotLabel": "Wind direction (2.5 m)",
+              "unit": "deg true",
+              "description": "True wind direction at 2.5 m after tower-rotation correction."
+            },
+            {
+              "column": "wd10",
+              "title": "Wind direction at 10 m",
+              "plotLabel": "Wind direction (10 m)",
+              "unit": "deg true",
+              "description": "True wind direction at 10 m after tower-rotation correction."
+            },
+            {
+              "column": "T2_5",
+              "rawColumn": "T2.5",
+              "title": "Air temperature at 2.5 m",
+              "plotLabel": "Temperature (2.5 m)",
+              "unit": "deg C",
+              "description": "Interpolated hourly air temperature at 2.5 m."
+            },
+            {
+              "column": "T10",
+              "title": "Air temperature at 10 m",
+              "plotLabel": "Temperature (10 m)",
+              "unit": "deg C",
+              "description": "Interpolated hourly air temperature at 10 m."
+            },
+            {
+              "column": "q2_5",
+              "rawColumn": "q2.5",
+              "title": "Humidity mixing ratio at 2.5 m",
+              "plotLabel": "q (2.5 m)",
+              "unit": "g/kg",
+              "description": "Interpolated hourly humidity mixing ratio at 2.5 m."
+            },
+            {
+              "column": "q10",
+              "title": "Humidity mixing ratio at 10 m",
+              "plotLabel": "q (10 m)",
+              "unit": "g/kg",
+              "description": "Interpolated hourly humidity mixing ratio at 10 m."
+            },
+            {
+              "column": "rhi2_5",
+              "rawColumn": "rhi2.5",
+              "title": "Relative humidity with respect to ice at 2.5 m",
+              "plotLabel": "RHi (2.5 m)",
+              "unit": "%",
+              "description": "Interpolated hourly relative humidity with respect to ice at 2.5 m."
+            },
+            {
+              "column": "rhi10",
+              "title": "Relative humidity with respect to ice at 10 m",
+              "plotLabel": "RHi (10 m)",
+              "unit": "%",
+              "description": "Interpolated hourly relative humidity with respect to ice at 10 m."
+            }
+          ]
+        },
+        {
+          "id": "surface_radiation",
+          "name": "Surface And Radiation",
+          "variables": [
+            {
+              "column": "T_sfc",
+              "title": "Best-estimate surface temperature",
+              "plotLabel": "Surface temperature",
+              "unit": "deg C",
+              "description": "Best estimate of surface temperature, primarily based on corrected Eppley radiometer temperatures with Barnes support when needed."
+            },
+            {
+              "column": "T_s_epp",
+              "title": "Eppley surface temperature",
+              "plotLabel": "Eppley surface temperature",
+              "unit": "deg C",
+              "description": "Surface temperature from the Eppley radiometer; generally the most reliable radiometric surface temperature."
+            },
+            {
+              "column": "T_s_brns",
+              "title": "Barnes surface temperature",
+              "plotLabel": "Barnes surface temperature",
+              "unit": "deg C",
+              "description": "Surface temperature from the Barnes radiometer."
+            },
+            {
+              "column": "Tice",
+              "title": "Ice temperature",
+              "plotLabel": "Ice temperature",
+              "unit": "deg C",
+              "description": "Ice temperature estimate from the ASFG dataset."
+            },
+            {
+              "column": "LWd",
+              "title": "Downwelling longwave radiation",
+              "plotLabel": "LW down",
+              "unit": "W/m^2",
+              "description": "Downwelling longwave radiative flux."
+            },
+            {
+              "column": "Lwu",
+              "title": "Upwelling longwave radiation",
+              "plotLabel": "LW up",
+              "unit": "W/m^2",
+              "description": "Upwelling longwave radiative flux."
+            },
+            {
+              "column": "SWd",
+              "title": "Downwelling shortwave radiation",
+              "plotLabel": "SW down",
+              "unit": "W/m^2",
+              "description": "Downwelling shortwave radiative flux."
+            },
+            {
+              "column": "Swu",
+              "title": "Upwelling shortwave radiation",
+              "plotLabel": "SW up",
+              "unit": "W/m^2",
+              "description": "Upwelling shortwave radiative flux."
+            },
+            {
+              "column": "RR_org",
+              "title": "Original precipitation rate",
+              "plotLabel": "Precipitation rate (original)",
+              "unit": "mm/h",
+              "description": "Original precipitation-rate estimate retained in the ASFG file."
+            },
+            {
+              "column": "RR_ncr",
+              "title": "NCAR-corrected precipitation rate",
+              "plotLabel": "Precipitation rate (NCAR corrected)",
+              "unit": "mm/h",
+              "description": "NCAR-corrected precipitation-rate estimate retained in the ASFG file."
+            },
+            {
+              "column": "twr_orien",
+              "title": "Tower orientation",
+              "plotLabel": "Tower orientation",
+              "unit": "deg true",
+              "description": "Orientation of the tower sonic boom arms used to convert measured wind direction to true wind direction."
+            }
+          ]
+        },
+        {
+          "id": "fluxes_bulk",
+          "name": "Median And Bulk Flux Products",
+          "variables": [
+            {
+              "column": "ww",
+              "title": "Vertical wind speed",
+              "plotLabel": "w",
+              "unit": "m/s",
+              "description": "Vertical wind component in the two-level file."
+            },
+            {
+              "column": "u_",
+              "rawColumn": "u*",
+              "title": "Friction velocity",
+              "plotLabel": "u*",
+              "unit": "m/s",
+              "description": "Median friction velocity from levels with good turbulence measurements."
+            },
+            {
+              "column": "hs",
+              "title": "Sensible heat flux",
+              "plotLabel": "H",
+              "unit": "W/m^2",
+              "description": "Median sensible heat flux from levels with good turbulence measurements."
+            },
+            {
+              "column": "hl",
+              "title": "Latent heat flux",
+              "plotLabel": "LE",
+              "unit": "W/m^2",
+              "description": "Eddy-correlation latent heat flux from the Ophir instruments; the readme recommends cautious use because values are low relative to bulk estimates."
+            },
+            {
+              "column": "usb_2_5",
+              "rawColumn": "usb_2.5",
+              "title": "Bulk friction velocity at 2.5 m",
+              "plotLabel": "u*b (2.5 m)",
+              "unit": "m/s",
+              "description": "Bulk-algorithm friction velocity referenced to 2.5 m."
+            },
+            {
+              "column": "usb_10",
+              "title": "Bulk friction velocity at 10 m",
+              "plotLabel": "u*b (10 m)",
+              "unit": "m/s",
+              "description": "Bulk-algorithm friction velocity referenced to 10 m."
+            },
+            {
+              "column": "hsb_2_5",
+              "rawColumn": "hsb_2.5",
+              "title": "Bulk sensible heat flux at 2.5 m",
+              "plotLabel": "Hb (2.5 m)",
+              "unit": "W/m^2",
+              "description": "Bulk sensible heat flux referenced to 2.5 m."
+            },
+            {
+              "column": "hsb_10",
+              "title": "Bulk sensible heat flux at 10 m",
+              "plotLabel": "Hb (10 m)",
+              "unit": "W/m^2",
+              "description": "Bulk sensible heat flux referenced to 10 m."
+            },
+            {
+              "column": "hlb_2_5",
+              "rawColumn": "hlb_2.5",
+              "title": "Bulk latent heat flux at 2.5 m",
+              "plotLabel": "LEb (2.5 m)",
+              "unit": "W/m^2",
+              "description": "Bulk latent heat flux referenced to 2.5 m."
+            },
+            {
+              "column": "hlb_10",
+              "title": "Bulk latent heat flux at 10 m",
+              "plotLabel": "LEb (10 m)",
+              "unit": "W/m^2",
+              "description": "Bulk latent heat flux referenced to 10 m."
+            }
+          ]
+        },
+        {
+          "id": "roughness_bulk",
+          "name": "Bulk Roughness Lengths",
+          "variables": [
+            {
+              "column": "zob2_5",
+              "rawColumn": "zob2.5",
+              "title": "Bulk momentum roughness length at 2.5 m",
+              "plotLabel": "z0,m (2.5 m)",
+              "unit": "m",
+              "description": "Bulk roughness length for momentum at 2.5 m."
+            },
+            {
+              "column": "zob10",
+              "title": "Bulk momentum roughness length at 10 m",
+              "plotLabel": "z0,m (10 m)",
+              "unit": "m",
+              "description": "Bulk roughness length for momentum at 10 m."
+            },
+            {
+              "column": "zotb2_5",
+              "rawColumn": "zotb2.5",
+              "title": "Bulk thermal roughness length at 2.5 m",
+              "plotLabel": "z0,t (2.5 m)",
+              "unit": "m",
+              "description": "Bulk roughness length for temperature at 2.5 m."
+            },
+            {
+              "column": "zotb10",
+              "title": "Bulk thermal roughness length at 10 m",
+              "plotLabel": "z0,t (10 m)",
+              "unit": "m",
+              "description": "Bulk roughness length for temperature at 10 m."
+            },
+            {
+              "column": "zoqb2_5",
+              "rawColumn": "zoqb2.5",
+              "title": "Bulk moisture roughness length at 2.5 m",
+              "plotLabel": "z0,q (2.5 m)",
+              "unit": "m",
+              "description": "Bulk roughness length for humidity at 2.5 m."
+            },
+            {
+              "column": "zogb10",
+              "title": "Bulk moisture roughness length at 10 m",
+              "plotLabel": "z0,q (10 m)",
+              "unit": "m",
+              "description": "Bulk roughness length for humidity at 10 m. The raw header uses 'zogb10'; keep that spelling for file-level fidelity, but it likely denotes the moisture roughness length analogous to zoqb2.5."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prof_file_all6_ed_hd",
+      "path": "data/sheba/raw/ncar_eol_dee002994255/prof_file_all6_ed_hd.txt",
+      "description": "Five-level hourly tower profile file with radiometer, surface, turbulence variance, structure-function, and quality-control fields.",
+      "categories": [
+        {
+          "id": "time_location",
+          "name": "Time And Location",
+          "variables": [
+            {
+              "column": "JD",
+              "title": "Julian day",
+              "plotLabel": "Julian day",
+              "unit": "UTC day since 1997-01-01",
+              "description": "Julian day counter used by the SHEBA ASFG files; Jan 1 1997 is day 1 and Jan 1 1998 is day 366."
+            },
+            {
+              "column": "lat",
+              "title": "Latitude",
+              "plotLabel": "Latitude",
+              "unit": "deg",
+              "description": "Platform latitude."
+            },
+            {
+              "column": "lon",
+              "title": "Longitude",
+              "plotLabel": "Longitude",
+              "unit": "deg",
+              "description": "Platform longitude."
+            },
+            {
+              "column": "Press",
+              "title": "Surface pressure",
+              "plotLabel": "Pressure",
+              "unit": "mb",
+              "description": "Observed surface pressure used in processing and flux calculations."
+            }
+          ]
+        },
+        {
+          "id": "geometry",
+          "name": "Measurement Geometry",
+          "variables": [
+            {
+              "pattern": "z[1-5]",
+              "members": ["z1", "z2", "z3", "z4", "z5"],
+              "titleTemplate": "Tower level {index} height",
+              "plotLabelTemplate": "z{index}",
+              "unit": "m",
+              "description": "Actual measurement height for tower level {index}. Use these heights when plotting or fitting profile-family variables at matching level indices."
+            },
+            {
+              "column": "zoph",
+              "title": "Ophir measurement height",
+              "plotLabel": "Ophir height",
+              "unit": "m",
+              "description": "Height of the Ophir-related measurement level used with latent-heat instrumentation."
+            }
+          ]
+        },
+        {
+          "id": "wind_profile",
+          "name": "Wind Profile",
+          "variables": [
+            {
+              "pattern": "ws[1-5]",
+              "members": ["ws1", "ws2", "ws3", "ws4", "ws5"],
+              "titleTemplate": "Wind speed at level {index}",
+              "plotLabelTemplate": "Wind speed (level {index})",
+              "unit": "m/s",
+              "description": "Tower wind speed at level {index}; pair with z{index} for the actual height."
+            },
+            {
+              "pattern": "wd[1-5]",
+              "members": ["wd1", "wd2", "wd3", "wd4", "wd5"],
+              "titleTemplate": "Wind direction at level {index}",
+              "plotLabelTemplate": "Wind direction (level {index})",
+              "unit": "deg true",
+              "description": "True wind direction at level {index} after tower-orientation correction."
+            },
+            {
+              "pattern": "ww[1-5]",
+              "members": ["ww1", "ww2", "ww3", "ww4", "ww5"],
+              "titleTemplate": "Vertical wind component at level {index}",
+              "plotLabelTemplate": "w (level {index})",
+              "unit": "m/s",
+              "description": "Vertical wind component at level {index}."
+            },
+            {
+              "pattern": "u_[1-5]",
+              "rawPattern": "u*[1-5]",
+              "members": ["u_1", "u_2", "u_3", "u_4", "u_5"],
+              "titleTemplate": "Friction velocity at level {index}",
+              "plotLabelTemplate": "u* (level {index})",
+              "unit": "m/s",
+              "description": "Friction velocity derived from the sonic measurements at level {index}."
+            }
+          ]
+        },
+        {
+          "id": "thermo_moisture_profile",
+          "name": "Thermodynamic And Moisture Profiles",
+          "variables": [
+            {
+              "pattern": "T[1-5]",
+              "members": ["T1", "T2", "T3", "T4", "T5"],
+              "titleTemplate": "Air temperature at level {index}",
+              "plotLabelTemplate": "Temperature (level {index})",
+              "unit": "deg C",
+              "description": "Tower air temperature at level {index}."
+            },
+            {
+              "pattern": "q[1-5]",
+              "members": ["q1", "q2", "q3", "q4", "q5"],
+              "titleTemplate": "Humidity mixing ratio at level {index}",
+              "plotLabelTemplate": "q (level {index})",
+              "unit": "g/kg",
+              "description": "Humidity mixing ratio at level {index}."
+            },
+            {
+              "pattern": "rh[1-5]",
+              "members": ["rh1", "rh2", "rh3", "rh4", "rh5"],
+              "titleTemplate": "Relative humidity at level {index}",
+              "plotLabelTemplate": "RH (level {index})",
+              "unit": "%",
+              "description": "Relative humidity at level {index}; use rhi{index} when humidity relative to ice is required."
+            },
+            {
+              "pattern": "rhi[1-5]",
+              "members": ["rhi1", "rhi2", "rhi3", "rhi4", "rhi5"],
+              "titleTemplate": "Relative humidity with respect to ice at level {index}",
+              "plotLabelTemplate": "RHi (level {index})",
+              "unit": "%",
+              "description": "Relative humidity with respect to ice at level {index}; recalculated from the original measurement relative to water."
+            }
+          ]
+        },
+        {
+          "id": "surface_radiation",
+          "name": "Surface, Temperature, And Radiation",
+          "variables": [
+            {
+              "column": "T_GE",
+              "title": "General Eastern temperature",
+              "plotLabel": "GE temperature",
+              "unit": "deg C",
+              "description": "General Eastern temperature-related surface measurement retained in the ASFG file."
+            },
+            {
+              "column": "Td_GE",
+              "title": "General Eastern dewpoint temperature",
+              "plotLabel": "GE dewpoint",
+              "unit": "deg C",
+              "description": "General Eastern dewpoint temperature."
+            },
+            {
+              "column": "T_s_epp",
+              "title": "Eppley surface temperature",
+              "plotLabel": "Eppley surface temperature",
+              "unit": "deg C",
+              "description": "Surface temperature from the Eppley radiometer; generally the most reliable radiometric surface temperature."
+            },
+            {
+              "column": "T_s_brns",
+              "title": "Barnes surface temperature",
+              "plotLabel": "Barnes surface temperature",
+              "unit": "deg C",
+              "description": "Surface temperature from the Barnes radiometer."
+            },
+            {
+              "column": "Tsnw",
+              "title": "Snow temperature",
+              "plotLabel": "Snow temperature",
+              "unit": "deg C",
+              "description": "Snow temperature estimate."
+            },
+            {
+              "column": "Tice",
+              "title": "Ice temperature",
+              "plotLabel": "Ice temperature",
+              "unit": "deg C",
+              "description": "Ice temperature estimate."
+            },
+            {
+              "column": "Tsfc",
+              "title": "Best-estimate surface temperature",
+              "plotLabel": "Surface temperature",
+              "unit": "deg C",
+              "description": "Best estimate of surface temperature, principally based on corrected Eppley temperatures with Barnes support when needed."
+            },
+            {
+              "column": "LWd",
+              "title": "Downwelling longwave radiation",
+              "plotLabel": "LW down",
+              "unit": "W/m^2",
+              "description": "Downwelling longwave radiative flux."
+            },
+            {
+              "column": "Lwu",
+              "title": "Upwelling longwave radiation",
+              "plotLabel": "LW up",
+              "unit": "W/m^2",
+              "description": "Upwelling longwave radiative flux."
+            },
+            {
+              "column": "SWd",
+              "title": "Downwelling shortwave radiation",
+              "plotLabel": "SW down",
+              "unit": "W/m^2",
+              "description": "Downwelling shortwave radiative flux."
+            },
+            {
+              "column": "Swu",
+              "title": "Upwelling shortwave radiation",
+              "plotLabel": "SW up",
+              "unit": "W/m^2",
+              "description": "Upwelling shortwave radiative flux."
+            },
+            {
+              "column": "RR_org",
+              "title": "Original precipitation rate",
+              "plotLabel": "Precipitation rate (original)",
+              "unit": "mm/h",
+              "description": "Original precipitation-rate estimate retained in the ASFG file."
+            },
+            {
+              "column": "RR_ncr",
+              "title": "NCAR-corrected precipitation rate",
+              "plotLabel": "Precipitation rate (NCAR corrected)",
+              "unit": "mm/h",
+              "description": "NCAR-corrected precipitation-rate estimate retained in the ASFG file."
+            },
+            {
+              "column": "twr_orien",
+              "title": "Tower orientation",
+              "plotLabel": "Tower orientation",
+              "unit": "deg true",
+              "description": "Orientation of the tower sonic boom arms used to calculate true wind direction."
+            }
+          ]
+        },
+        {
+          "id": "fluxes",
+          "name": "Turbulent Fluxes",
+          "variables": [
+            {
+              "pattern": "hs[1-5]",
+              "members": ["hs1", "hs2", "hs3", "hs4", "hs5"],
+              "titleTemplate": "Sensible heat flux at level {index}",
+              "plotLabelTemplate": "H (level {index})",
+              "unit": "W/m^2",
+              "description": "Sensible heat flux at level {index}."
+            },
+            {
+              "column": "hl",
+              "title": "Latent heat flux",
+              "plotLabel": "LE",
+              "unit": "W/m^2",
+              "description": "Eddy-correlation latent heat flux from the Ophir instruments; the ASFG readme recommends cautious use because it is low relative to bulk estimates."
+            }
+          ]
+        },
+        {
+          "id": "variances",
+          "name": "Variance-Like Turbulence Moments",
+          "variables": [
+            {
+              "pattern": "sgu[1-5]",
+              "members": ["sgu1", "sgu2", "sgu3", "sgu4", "sgu5"],
+              "titleTemplate": "Variance of u at level {index}",
+              "plotLabelTemplate": "var(u) level {index}",
+              "unit": "m/s^2",
+              "description": "Variance-like second-moment quantity for the streamwise wind component at level {index}."
+            },
+            {
+              "pattern": "sgv[1-5]",
+              "members": ["sgv1", "sgv2", "sgv3", "sgv4", "sgv5"],
+              "titleTemplate": "Variance of v at level {index}",
+              "plotLabelTemplate": "var(v) level {index}",
+              "unit": "m/s^2",
+              "description": "Variance-like second-moment quantity for the cross-stream wind component at level {index}."
+            },
+            {
+              "pattern": "sgw[1-5]",
+              "members": ["sgw1", "sgw2", "sgw3", "sgw4", "sgw5"],
+              "titleTemplate": "Variance of w at level {index}",
+              "plotLabelTemplate": "var(w) level {index}",
+              "unit": "m/s^2",
+              "description": "Variance-like second-moment quantity for the vertical wind component at level {index}."
+            },
+            {
+              "pattern": "sgT[1-5]",
+              "members": ["sgT1", "sgT2", "sgT3", "sgT4", "sgT5"],
+              "titleTemplate": "Temperature variance at level {index}",
+              "plotLabelTemplate": "var(T) level {index}",
+              "unit": "deg C^2",
+              "description": "Temperature variance-like second moment at level {index}."
+            }
+          ]
+        },
+        {
+          "id": "structure_functions",
+          "name": "Structure-Function Parameters",
+          "variables": [
+            {
+              "pattern": "cu2[1-5]",
+              "members": ["cu21", "cu22", "cu23", "cu24", "cu25"],
+              "titleTemplate": "C_u^2 at level {index}",
+              "plotLabelTemplate": "C_u^2 level {index}",
+              "unit": "x^2/m^2/3",
+              "description": "Structure-function parameter C_u^2 for the streamwise wind component at level {index}."
+            },
+            {
+              "pattern": "cv2[1-5]",
+              "members": ["cv21", "cv22", "cv23", "cv24", "cv25"],
+              "titleTemplate": "C_v^2 at level {index}",
+              "plotLabelTemplate": "C_v^2 level {index}",
+              "unit": "x^2/m^2/3",
+              "description": "Structure-function parameter C_v^2 for the cross-stream wind component at level {index}."
+            },
+            {
+              "pattern": "cw2[1-5]",
+              "members": ["cw21", "cw22", "cw23", "cw24", "cw25"],
+              "titleTemplate": "C_w^2 at level {index}",
+              "plotLabelTemplate": "C_w^2 level {index}",
+              "unit": "x^2/m^2/3",
+              "description": "Structure-function parameter C_w^2 for the vertical wind component at level {index}."
+            },
+            {
+              "pattern": "cT2[1-5]",
+              "members": ["cT21", "cT22", "cT23", "cT24", "cT25"],
+              "titleTemplate": "C_T^2 at level {index}",
+              "plotLabelTemplate": "C_T^2 level {index}",
+              "unit": "x^2/m^2/3",
+              "description": "Structure-function parameter C_T^2 for temperature at level {index}."
+            }
+          ]
+        },
+        {
+          "id": "quality_control",
+          "name": "FFT Counts And QC Flags",
+          "variables": [
+            {
+              "pattern": "No[1-5]",
+              "members": ["No1", "No2", "No3", "No4", "No5"],
+              "titleTemplate": "FFT sample count at level {index}",
+              "plotLabelTemplate": "FFT count level {index}",
+              "unit": "count",
+              "description": "Number of points used in the turbulence FFT at level {index}."
+            },
+            {
+              "pattern": "fl[1-5]",
+              "members": ["fl1", "fl2", "fl3", "fl4", "fl5"],
+              "titleTemplate": "QC flag at level {index}",
+              "plotLabelTemplate": "QC flag level {index}",
+              "unit": "0=pass,1=fail",
+              "description": "Quality-control flag for turbulence data at level {index}; if the flag is 1, the wind data may also be suspect because it is derived from the sonic measurements."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

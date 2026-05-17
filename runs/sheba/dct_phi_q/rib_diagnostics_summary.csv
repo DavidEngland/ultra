@@ -1,0 +1,7 @@
+metric,value
+rib_available,1.0
+rib_window_count,1823.0
+rib_laminar_count,48.0
+rib_laminar_fraction,0.026330224904004388
+c3_median_laminar,15.103633340854612
+c3_median_non_laminar,15.103633340854612

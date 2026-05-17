@@ -1,12 +1,16 @@
 # SHEBA DCT Two-Layer Analysis
 
 - Input: /Users/davidengland/Documents/GitHub/ultra/runs/sheba/input/sheba_input.csv
+- Output dir: /Users/davidengland/Documents/GitHub/ultra/runs/sheba/dct_main_file6
 - Rows used: 2266
 - Quantile bins: 48
 - DCT modes kept: 8
 - Binned reconstruction RMSE: 0.15298
 - Binned reconstruction MAE: 0.09843
 - Spectral variance kept: 99.34%
+
+- Fingerprints: 48
+- Stable events: 24
 
 ## Regime Summary
 
@@ -16,10 +20,16 @@
 
 ## Artifacts
 
+- fingerprints.csv
+- stable_events.csv
+- stability_counts.csv
+- diagnostics_summary.csv
 - sheba_binned_profile.csv
 - sheba_dct_coeffs.csv
 - sheba_dct_reconstruction.csv
 - sheba_regime_stats.csv
 - sheba_dct_diagnostics.csv
+- rib_diagnostics_summary.csv
+- rib_laminar_events.csv
 - plot_sheba_dct_curve.png
 - plot_sheba_dct_coeffs.png

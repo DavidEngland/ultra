@@ -84,11 +84,72 @@ SHEBA preprocess:
 julia --project=. src/julia/preprocess_sheba_main.jl runs/sheba/input/sheba_input.csv data/sheba/raw/main_file6_hd.txt
 ```
 
+SHEBA preprocess from richer NCAR/EOL 5-level profile file:
+
+```bash
+julia --project=. src/julia/preprocess_sheba_main.jl \
+  runs/sheba/input/sheba_input_rich.csv \
+  data/sheba/raw/ncar_eol_dee002994255/prof_file_all6_ed_hd.txt
+```
+
+This preserves compatibility fields (`time`, `zeta`, `phi_obs`) and also carries
+many extra profile/flux variables (for example `z1..z5`, `ws1..ws5`, `T1..T5`,
+`q1..q5`, `rh1..rh5`, `u_1..u_5`, `hs1..hs5`, `hl`, radiation terms) when present.
+
 SHEBA fit (Grachev baseline):
 
 ```bash
 julia --project=. src/julia/sheba_ultra.jl runs/sheba/input/sheba_input.csv runs/sheba/fit/sheba_ultra_grachev SHEBA --baseline=grachev
 ```
+
+SHEBA DCT parity run (legacy + SMEAR-style artifacts):
+
+```bash
+julia --project=. -e 'include("src/julia/DCT_SHEBA.jl")'
+```
+
+Optional environment controls:
+
+```bash
+DCT_SHEBA_INPUT_CSV="runs/sheba/input/sheba_input.csv" \
+DCT_SHEBA_OUT_DIR="runs/sheba/dct_main_file6" \
+DCT_SHEBA_OBS_COL="phi_obs" \
+DCT_SHEBA_ROLLING_WINDOW=12 \
+julia --project=. -e 'include("src/julia/DCT_SHEBA.jl")'
+```
+
+Run against the richer NCAR-derived input:
+
+```bash
+DCT_SHEBA_INPUT_CSV="runs/sheba/input/sheba_input_rich.csv" \
+DCT_SHEBA_OUT_DIR="runs/sheba/dct_main_file6_rich" \
+julia --project=. -e 'include("src/julia/DCT_SHEBA.jl")'
+```
+
+Run heat and humidity scalar variants from the same rich input:
+
+```bash
+DCT_SHEBA_INPUT_CSV="runs/sheba/input/sheba_input_rich.csv" \
+DCT_SHEBA_OUT_DIR="runs/sheba/dct_phi_h" \
+DCT_SHEBA_OBS_COL="phi_h" \
+julia --project=. -e 'include("src/julia/DCT_SHEBA.jl")'
+
+DCT_SHEBA_INPUT_CSV="runs/sheba/input/sheba_input_rich.csv" \
+DCT_SHEBA_OUT_DIR="runs/sheba/dct_phi_q" \
+DCT_SHEBA_OBS_COL="phi_q" \
+julia --project=. -e 'include("src/julia/DCT_SHEBA.jl")'
+```
+
+`phi_obs` remains the backward-compatible default and is currently equal to `phi_m`.
+
+Expected parity outputs include:
+
+- [runs/sheba/dct_main_file6/fingerprints.csv](runs/sheba/dct_main_file6/fingerprints.csv)
+- [runs/sheba/dct_main_file6/stable_events.csv](runs/sheba/dct_main_file6/stable_events.csv)
+- [runs/sheba/dct_main_file6/stability_counts.csv](runs/sheba/dct_main_file6/stability_counts.csv)
+- [runs/sheba/dct_main_file6/diagnostics_summary.csv](runs/sheba/dct_main_file6/diagnostics_summary.csv)
+- [runs/sheba/dct_main_file6/rib_diagnostics_summary.csv](runs/sheba/dct_main_file6/rib_diagnostics_summary.csv)
+- [runs/sheba/dct_main_file6/report.md](runs/sheba/dct_main_file6/report.md)
 
 Synthetic ultraspherical smoke test:
 
