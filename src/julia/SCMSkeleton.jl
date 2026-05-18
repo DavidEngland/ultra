@@ -1,6 +1,12 @@
 module SCMSkeleton
 
+using CSV
+using DataFrames
+using Dates
 using LinearAlgebra
+
+include(joinpath(@__DIR__, "MOSTProfiles.jl"))
+using .MOSTProfiles
 
 export ModelConfig,
 	   Grid,
@@ -15,16 +21,25 @@ export ModelConfig,
 	   AbstractClosure,
 	   ConstantDiffusivityClosure,
 	   RiBasedClosure,
+	   CurvatureRiClosure,
 	   build_grid,
 	   initial_state,
 	   default_forcing,
 	   diffusivities,
 	   diagnose_richardson,
 	   compute_tke_budget,
+	   surface_flux_most,
+	   forcing_from_row,
+	   surface_state_from_row,
+	   load_forcing_table,
+	   load_sheba_forcing_table,
+	   load_smear_forcing_table,
+	   smear_api_to_forcing_table,
 	   step!,
 	   run_model
 
 const GRAVITY = 9.81
+const VON_KARMAN = 0.40
 
 Base.@kwdef struct ModelConfig
 	z_top::Float64 = 500.0
@@ -61,10 +76,15 @@ end
 
 mutable struct SurfaceState
 	temperature::Float64
+	specific_humidity::Float64
 	sensible_flux::Float64
 	latent_flux::Float64
 	net_radiation::Float64
 	ground_flux::Float64
+	zeta::Float64
+	friction_velocity::Float64
+	heat_transfer_coeff::Float64
+	moisture_transfer_coeff::Float64
 end
 
 Base.@kwdef struct SurfaceSlabParameters
@@ -76,6 +96,7 @@ Base.@kwdef struct SurfaceSlabParameters
 	emissivity::Float64 = 0.98
 	z0m::Float64 = 0.05
 	z0h::Float64 = 0.01
+	displacement_height::Float64 = 0.0
 	moisture_availability::Float64 = 1.0
 end
 
@@ -107,6 +128,10 @@ struct Forcing
 	specific_humidity_ref::Float64
 	wind_speed_ref::Float64
 	surface_pressure::Float64
+	friction_velocity::Float64
+	obukhov_length::Float64
+	zeta_reference::Float64
+	reference_height::Float64
 	prescribed_surface_fluxes::Bool
 end
 
@@ -115,6 +140,10 @@ mutable struct SimulationHistory
 	surface_temperature::Vector{Float64}
 	sensible_flux::Vector{Float64}
 	latent_flux::Vector{Float64}
+	surface_zeta::Vector{Float64}
+	surface_friction_velocity::Vector{Float64}
+	heat_transfer_coeff::Vector{Float64}
+	moisture_transfer_coeff::Vector{Float64}
 	max_km::Vector{Float64}
 	max_kh::Vector{Float64}
 	max_ri::Vector{Float64}
@@ -190,12 +219,16 @@ function default_forcing(config::ModelConfig)
 		config.q0,
 		hypot(config.u0, config.v0),
 		101325.0,
+		NaN,
+		NaN,
+		0.0,
+		10.0,
 		true,
 	)
 end
 
 function _default_surface(config::ModelConfig)
-	return SurfaceState(config.theta0, 0.0, 0.0, 0.0, 0.0)
+	return SurfaceState(config.theta0, config.q0, 0.0, 0.0, 0.0, 0.0, NaN, NaN, NaN, NaN)
 end
 
 function _default_slab(config::ModelConfig)
@@ -204,6 +237,10 @@ end
 
 function _empty_history()
 	return SimulationHistory(
+		Float64[],
+		Float64[],
+		Float64[],
+		Float64[],
 		Float64[],
 		Float64[],
 		Float64[],
@@ -255,6 +292,10 @@ function diffusivities(closure::RiBasedClosure, model::SCMModel)
 	kh = km ./ closure.Pr_t
 	return km, kh
 end
+
+include(joinpath(@__DIR__, "scm", "SurfaceMOST.jl"))
+include(joinpath(@__DIR__, "scm", "ForcingIO.jl"))
+include(joinpath(@__DIR__, "CurvatureRiClosure.jl"))
 
 function _interface_conductance(k::AbstractVector{<:Real}, grid::Grid)
 	nz = grid.nz
@@ -311,6 +352,18 @@ function _surface_tendencies(model::SCMModel)
 	if forcing.prescribed_surface_fluxes
 		surface.sensible_flux = forcing.sensible_flux
 		surface.latent_flux = forcing.latent_flux
+		surface.friction_velocity = forcing.friction_velocity
+		surface.zeta = forcing.zeta_reference
+		surface.heat_transfer_coeff = NaN
+		surface.moisture_transfer_coeff = NaN
+	else
+		diag = surface_flux_most(model)
+		surface.sensible_flux = diag.sensible_flux
+		surface.latent_flux = diag.latent_flux
+		surface.friction_velocity = diag.friction_velocity
+		surface.zeta = diag.zeta
+		surface.heat_transfer_coeff = diag.heat_transfer_coeff
+		surface.moisture_transfer_coeff = diag.moisture_transfer_coeff
 	end
 	surface.net_radiation = forcing.shortwave_down + forcing.longwave_down
 	surface.ground_flux = surface.net_radiation - surface.sensible_flux - surface.latent_flux
@@ -333,6 +386,10 @@ function _record_history!(history::SimulationHistory, model::SCMModel, km::Abstr
 	push!(history.surface_temperature, model.surface.temperature)
 	push!(history.sensible_flux, model.surface.sensible_flux)
 	push!(history.latent_flux, model.surface.latent_flux)
+	push!(history.surface_zeta, model.surface.zeta)
+	push!(history.surface_friction_velocity, model.surface.friction_velocity)
+	push!(history.heat_transfer_coeff, model.surface.heat_transfer_coeff)
+	push!(history.moisture_transfer_coeff, model.surface.moisture_transfer_coeff)
 	push!(history.max_km, maximum(km))
 	push!(history.max_kh, maximum(kh))
 	push!(history.max_ri, maximum(ri))
@@ -345,6 +402,7 @@ function step!(model::SCMModel, closure::AbstractClosure)
 	config = model.config
 	state = model.state
 	forcing = model.forcing
+	model.surface.temperature = model.slab.skin_temperature
 	km, kh = diffusivities(closure, model)
 	theta_source, q_source = _surface_tendencies(model)
 	theta_rhs = state.theta .+ config.dt .* (forcing.theta_tendency .+ theta_source)
@@ -364,7 +422,6 @@ function step!(model::SCMModel, closure::AbstractClosure)
 		state.v .= v_rhs .+ config.dt .* _explicit_diffusion_tendency(v_rhs, km, model.grid)
 	end
 
-	model.surface.temperature = model.slab.skin_temperature
 	model.time += config.dt
 	model.step_count += 1
 	return km, kh

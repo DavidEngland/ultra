@@ -32,8 +32,21 @@ See docs/QUICKSTART.md.
 
 - src/julia/preprocess_tower_to_ultra_input.jl
 - src/julia/preprocess_sheba_main.jl
+- src/julia/SCMSkeleton.jl
+- src/julia/scm/README.md
 - src/julia/ultraspherical_practical_run.jl
 - src/julia/sheba_ultra.jl
+
+## SCM Surface
+
+The single-column model work is now collected around:
+
+- src/julia/SCMSkeleton.jl
+- src/julia/scm/README.md
+- docs/SCM_Workflows.md
+- test/scm_smoke.jl
+
+These files document the current SCM architecture, CSV and API forcing workflow, the first MOST surface-coupling path, and the narrow smoke validation script.
 
 ## Data Provenance
 

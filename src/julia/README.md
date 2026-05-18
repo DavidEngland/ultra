@@ -5,12 +5,13 @@ This folder contains lightweight Julia prototypes for atmospheric boundary-layer
 ## Files
 
 - [SCMSkeleton.jl](SCMSkeleton.jl): clean 1D single-column model scaffold for prototyping closures and forcings.
+- [scm/README.md](scm/README.md): SCM index for forcing adapters, MOST surface coupling, validation, and related files.
 - [toy_sc_m.jl](toy_sc_m.jl): earlier toy Arctic column model with more embedded physics in a single script.
 - [MOSTProfiles.jl](MOSTProfiles.jl): Monin-Obukhov similarity profile utilities.
 
 ## Recommended Starting Point
 
-If the goal is to build a reusable single-column model, start with [SCMSkeleton.jl](SCMSkeleton.jl).
+If the goal is to build a reusable single-column model, start with [SCMSkeleton.jl](SCMSkeleton.jl) and [scm/README.md](scm/README.md).
 
 Why:
 
@@ -51,7 +52,6 @@ The skeleton is intentionally incomplete. It currently uses:
 
 It does not yet include:
 
-- Monin-Obukhov surface coupling,
 - implicit vertical diffusion,
 - radiation,
 - Coriolis forcing,
@@ -60,6 +60,8 @@ It does not yet include:
 - NetCDF output.
 
 ## Suggested Next Step
+
+Use [../docs/SCM_Workflows.md](../docs/SCM_Workflows.md) for the current CSV and API-backed SCM workflow.
 
 Implement a new closure by adding a subtype of `AbstractClosure` in [SCMSkeleton.jl](SCMSkeleton.jl) and defining
 `diffusivities(closure, model)`.
