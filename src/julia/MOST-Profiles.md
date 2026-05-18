@@ -15,8 +15,10 @@ This is the heart of the module, providing an interface to define different empi
 * **Supported Profiles** include well-known formulations like:
     * **BD\_PL** (Power-law Businger–Dyer)
     * **BD\_CLASSIC** (Classical composite)
+    * **DYER47** (legacy alias to the classical Businger–Dyer composite)
     * **QSBL** (Quadratic Stable Surrogate)
     * **CB** (Cheng–Brutsaert monotone)
+    * **GRACHEV / GRACHEV07 / SHEBA07** (Grachev et al. 2007 stable cube-root branch, useful for SHEBA and polar stable-boundary-layer work)
     * **URC** (Ri-based closure - a special case where the functions are defined in terms of $\text{Ri}$ instead of $\zeta$).
 
 ### 2. $\text{Ri}$ / $\zeta$ Utilities

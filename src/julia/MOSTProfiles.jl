@@ -37,8 +37,10 @@ Return (phi_m(ζ), phi_h(ζ)) callables for the requested profile family.
 Supported tags:
 - "BD_PL"      : Power-law Businger–Dyer (am,bm,ah,bh)
 - "BD_CLASSIC" : Classical composite (a,cm,ch,pm_exp,ph_exp)
+- "DYER47"     : Alias for classical Businger-Dyer / Dyer-style composite
 - "HOG88"      : Linear stable (cm,ch,c0h)
 - "QSBL"       : Quadratic stable surrogate (am,bm,ah,bh) for ζ≥0
+- "GRACHEV"    : Grachev et al. (2007) stable cube-root branch (am,bm[,ah,bh])
 - "CB"         : Cheng–Brutsaert monotone (gm,pm,gh,ph)
 - "RPL"        : Regularized power law (alpha_m,beta_m,delta_m,alpha_h,beta_h,delta_h)
 - "VEXP"       : Variable exponent (alpha_m,beta_m,eta_m,alpha_h,beta_h,eta_h)
@@ -77,6 +79,10 @@ function make_profile(tag::AbstractString, pars::Dict)
         return ϕm, ϕh
     end
 
+    if t == "DYER47" || t == "DYER"
+        return make_profile("BD_CLASSIC", pars)
+    end
+
     if t == "HOG88"
         cm  = get(pars, :cm, 5.0)
         ch  = get(pars, :ch, 7.8)
@@ -88,6 +94,22 @@ function make_profile(tag::AbstractString, pars::Dict)
         am,bm,ah,bh = pars[:am], pars[:bm], pars[:ah], pars[:bh]
         ϕm = z -> 1 + am*z + bm*z*z
         ϕh = z -> 1 + ah*z + bh*z*z
+        return ϕm, ϕh
+    end
+
+    if t == "GRACHEV" || t == "GRACHEV07" || t == "SHEBA07"
+        am = get(pars, :am, get(pars, :a, 5.0))
+        bm = get(pars, :bm, get(pars, :b, 5.0))
+        ah = get(pars, :ah, am)
+        bh = get(pars, :bh, bm)
+        ϕm = z -> begin
+            zs = max(z, 0.0)
+            1.0 + (am * zs * max(1.0 + zs, 1e-8)^(1.0 / 3.0)) / max(1.0 + bm * zs, 1e-8)
+        end
+        ϕh = z -> begin
+            zs = max(z, 0.0)
+            1.0 + (ah * zs * max(1.0 + zs, 1e-8)^(1.0 / 3.0)) / max(1.0 + bh * zs, 1e-8)
+        end
         return ϕm, ϕh
     end
 
