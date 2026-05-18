@@ -7,7 +7,7 @@ This folder contains lightweight Julia prototypes for atmospheric boundary-layer
 - [SCMSkeleton.jl](SCMSkeleton.jl): clean 1D single-column model scaffold for prototyping closures and forcings.
 - [scm/README.md](scm/README.md): SCM index for forcing adapters, MOST surface coupling, validation, and related files.
 - [toy_sc_m.jl](toy_sc_m.jl): earlier toy Arctic column model with more embedded physics in a single script.
-- [MOSTProfiles.jl](MOSTProfiles.jl): Monin-Obukhov similarity profile utilities.
+- [MOSTProfiles.jl](MOSTProfiles.jl): Monin-Obukhov similarity profile families and Ri-zeta correction utilities.
 
 ## Recommended Starting Point
 
@@ -27,7 +27,7 @@ The skeleton is organized around the standard SCM loop:
 
 1. Build a vertical grid.
 2. Initialize prognostic state variables.
-3. Define a forcing function for large-scale tendencies and surface fluxes.
+3. Define a forcing function for large-scale tendencies and either prescribed or MOST-resolved surface fluxes.
 4. Define a turbulence closure that returns momentum and scalar diffusivities.
 5. Advance the model in time.
 6. Record a small set of diagnostics.
@@ -45,19 +45,20 @@ The main audience is numerical modelers who want to test:
 
 The skeleton is intentionally incomplete. It currently uses:
 
-- forward-Euler time stepping,
-- a placeholder constant-diffusivity closure,
-- prescribed surface fluxes,
+- explicit or implicit vertical diffusion depending on configuration,
+- baseline constant-diffusivity and Richardson-dependent closures,
+- prescribed surface fluxes or a selectable MOST surface profile,
 - a very simple boundary-layer-depth proxy.
 
 It does not yet include:
 
-- implicit vertical diffusion,
 - radiation,
 - Coriolis forcing,
 - prognostic TKE,
 - rigorous moisture thermodynamics,
 - NetCDF output.
+
+`MOSTProfiles.jl` should stay focused on the baseline similarity families and correction utilities. If spectral, Gegenbauer, or ML calibration is added later, it should sit in a separate layer that augments or compares against those baseline profiles.
 
 ## Suggested Next Step
 

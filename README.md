@@ -48,6 +48,8 @@ The single-column model work is now collected around:
 
 These files document the current SCM architecture, CSV and API forcing workflow, the first MOST surface-coupling path, and the narrow smoke validation script.
 
+`src/julia/MOSTProfiles.jl` remains the place for local MOST profile families and the existing correction utilities. Future spectral, Gegenbauer, or ML calibration work should live in a separate layer rather than expanding the core similarity registry.
+
 ## Data Provenance
 
 SHEBA provenance and checksums are documented in:

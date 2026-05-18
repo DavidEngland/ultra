@@ -1,6 +1,3 @@
-const _DEFAULT_SURFACE_PROFILE_PARS = Dict{Symbol, Any}()
-const _DEFAULT_SURFACE_PHI_M, _DEFAULT_SURFACE_PHI_H = make_profile("BD_CLASSIC", _DEFAULT_SURFACE_PROFILE_PARS)
-
 @inline _positive_or(value::Real, fallback::Real) = (isfinite(value) && value > 0) ? Float64(value) : Float64(fallback)
 @inline _finite_or(value::Real, fallback::Real) = isfinite(value) ? Float64(value) : Float64(fallback)
 
@@ -25,6 +22,7 @@ function surface_flux_most(model::SCMModel)
     surface = model.surface
     params = model.surface_params
     tower = model.tower
+    phi_m_fn, phi_h_fn = make_profile(params.most_profile_tag, params.most_profile_pars)
 
     z_u = _positive_or(tower.z_u, model.grid.z[1])
     z_t = _positive_or(tower.z_t, model.grid.z[1])
@@ -33,9 +31,9 @@ function surface_flux_most(model::SCMModel)
     zeta_t = _scaled_zeta(forcing, z_t)
     zeta_q = _scaled_zeta(forcing, z_q)
 
-    phi_m = _positive_or(_DEFAULT_SURFACE_PHI_M(zeta_u), 1.0)
-    phi_h_t = _positive_or(_DEFAULT_SURFACE_PHI_H(zeta_t), 1.0)
-    phi_h_q = _positive_or(_DEFAULT_SURFACE_PHI_H(zeta_q), 1.0)
+    phi_m = _positive_or(phi_m_fn(zeta_u), 1.0)
+    phi_h_t = _positive_or(phi_h_fn(zeta_t), 1.0)
+    phi_h_q = _positive_or(phi_h_fn(zeta_q), 1.0)
 
     logm = _surface_log_term(z_u, params.z0m, params.displacement_height)
     logh = _surface_log_term(z_t, params.z0h, params.displacement_height)

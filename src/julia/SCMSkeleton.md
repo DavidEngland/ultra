@@ -224,14 +224,16 @@ can plot the vertical structure of the budget, not just the column maximum.
 
 ## Surface Flux Handling
 
-Surface fluxes are currently prescribed through the `Forcing` object and applied directly to the first level.
+Surface fluxes can now be handled in two ways: they can be prescribed through the `Forcing` object and applied directly to the first level, or they can be diagnosed by the current MOST surface routine when `prescribed_surface_fluxes=false`.
 
-That is numerically simple, but physically incomplete. A more realistic next step would be to replace this with a Monin-Obukhov or bulk-aerodynamic surface routine that uses:
+The prescribed-flux path is numerically simple, but physically incomplete. The current MOST path is a first step toward a more realistic Monin-Obukhov or bulk-aerodynamic surface routine that uses:
 
 - near-surface wind,
 - surface temperature,
 - roughness lengths,
 - stability functions.
+
+The active profile family is selected through `SurfaceSlabParameters`, with `BD_CLASSIC` as the default and alternatives such as `GRACHEV` available for explicit SHEBA or polar runs.
 
 At that point, `SurfaceState` would likely need to hold additional variables such as roughness, skin temperature, and possibly soil or snow properties.
 

@@ -31,7 +31,14 @@ row = forcing_table[1, :]
 config = ModelConfig(nz=24, dt=20.0, t_end=600.0, use_implicit=true)
 forcing = forcing_from_row(row, config.nz; prescribed_surface_fluxes=false)
 surface = surface_state_from_row(row)
-model, history = run_model(config; forcing=forcing, surface=surface, closure=CurvatureRiClosure(0.8))
+surface_params = SurfaceSlabParameters(most_profile_tag="GRACHEV")
+model, history = run_model(
+    config;
+    forcing=forcing,
+    surface=surface,
+    surface_params=surface_params,
+    closure=CurvatureRiClosure(0.8),
+)
 ```
 
 ### SMEAR CSV
@@ -76,7 +83,8 @@ Set `prescribed_surface_fluxes=true` when the forcing row should inject observed
 
 Set `prescribed_surface_fluxes=false` to use `surface_flux_most(model)`. The current MOST routine:
 
-- uses `MOSTProfiles.jl` with a `BD_CLASSIC` profile family
+- resolves its profile family from `SurfaceSlabParameters`, defaulting to `BD_CLASSIC`
+- can be pointed at SHEBA-oriented families such as `GRACHEV` explicitly without changing dataset parsing
 - consumes `u_*`, `L` or `zeta`, reference wind, reference temperature, reference humidity, roughness lengths, and tower heights
 - returns sensible flux, latent flux, `u_*`, `zeta`, and transfer coefficients for history tracking
 
@@ -91,6 +99,16 @@ The current SCM surface is designed to work with:
 - future calibration workflows where a forcing table can be regenerated externally and replayed through the same SCM driver
 
 That split is deliberate. The SCM should consume normalized forcing products, not own every upstream fetch or preprocessing detail.
+
+`MOSTProfiles.jl` remains the home for local profile families and the existing Ri-zeta correction utilities. Spectral, Gegenbauer, or ML calibration work should live in a separate layer that can adjust or compare against the baseline MOST response rather than replacing the core similarity registry.
+
+## Practical Rollout Order
+
+- Validate the SCM surface and closure path on SHEBA first, where the stable Arctic use case is already the cleanest target.
+- Extend next to SMEAR-I or Varrio for boreal stable cases and humidity coupling.
+- Bring in SMEAR-II or Hyytiala after the SHEBA-to-Varrio path is stable, since canopy and structural complexity make it a harder transfer case.
+
+Tracer priority should stay in this order: momentum first, heat second, humidity third, CO2 fourth, then additional tracers after the surface and closure path are stable.
 
 ## Immediate Gaps
 

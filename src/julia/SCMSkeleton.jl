@@ -98,6 +98,8 @@ Base.@kwdef struct SurfaceSlabParameters
 	z0h::Float64 = 0.01
 	displacement_height::Float64 = 0.0
 	moisture_availability::Float64 = 1.0
+	most_profile_tag::String = "BD_CLASSIC"
+	most_profile_pars::Dict{Symbol, Any} = Dict{Symbol, Any}()
 end
 
 mutable struct SurfaceSlabState

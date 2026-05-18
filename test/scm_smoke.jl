@@ -24,9 +24,22 @@ config = ModelConfig(nz=12, dt=10.0, t_end=60.0, use_implicit=true)
 forcing = forcing_from_row(sheba_row, config.nz; prescribed_surface_fluxes=false)
 surface = surface_state_from_row(sheba_row)
 model, history = run_model(config; forcing=forcing, surface=surface, closure=CurvatureRiClosure(0.8), log_every=1)
+grachev_params = SurfaceSlabParameters(most_profile_tag="GRACHEV")
+grachev_model, grachev_history = run_model(
+    config;
+    forcing=forcing,
+    surface=surface,
+    surface_params=grachev_params,
+    closure=CurvatureRiClosure(0.8),
+    log_every=1,
+)
 
 @assert !isempty(history.time)
 @assert all(isfinite, model.state.theta)
 @assert any(isfinite, history.surface_friction_velocity)
 @assert any(isfinite, history.surface_zeta)
+@assert !isempty(grachev_history.time)
+@assert all(isfinite, grachev_model.state.theta)
+@assert any(isfinite, grachev_history.surface_friction_velocity)
+@assert any(isfinite, grachev_history.surface_zeta)
 println("scm_smoke_ok")
