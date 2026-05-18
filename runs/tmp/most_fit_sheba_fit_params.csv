@@ -1,0 +1,7 @@
+tracer,phi_column,family,unstable_fit_status,weak_fit_status,n_unstable,n_near_neutral,n_weakly_stable,n_strongly_stable,b_unstable,lambda_unstable,neutral_slope,ri_thickness,ric_regime,c2_weakly_stable,rmse_unstable,rmse_weakly_stable,mae_unstable,mae_weakly_stable,rmse_piecewise,mae_piecewise
+momentum,phi_m,BD_CLASSIC,default_no_unstable_data,fit_ok,0,923,387,513,16.0,4.0,4.0,0.25,0.25,-0.35424915891832004,NaN,0.3575298799972637,NaN,0.2702934844995135,0.40401687540906084,0.2157433900633275
+momentum,phi_m,BD_PL,default_no_unstable_data,fit_ok,0,923,387,513,16.0,4.0,4.0,0.25,0.25,-0.35424915891832004,NaN,0.3575298799972637,NaN,0.2702934844995135,0.40401687540906084,0.2157433900633275
+heat,phi_h,BD_CLASSIC,default_no_unstable_data,fit_ok,0,923,387,513,16.0,2.0,8.0,0.125,0.25,-49.694146607178595,NaN,0.9445562344171149,NaN,0.705164975066324,1.731067102178944,1.3362654076138358
+heat,phi_h,BD_PL,default_no_unstable_data,fit_ok,0,923,387,513,16.0,2.0,8.0,0.125,0.25,-49.694146607178595,NaN,0.9445562344171149,NaN,0.705164975066324,1.731067102178944,1.3362654076138358
+q,phi_q,BD_CLASSIC,default_no_unstable_data,fit_ok,0,454,221,252,16.0,2.0,8.0,0.125,0.25,104.93098750806246,NaN,66.16560115823559,NaN,26.314882889812022,216.1705414189554,32.57782724598632
+q,phi_q,BD_PL,default_no_unstable_data,fit_ok,0,454,221,252,16.0,2.0,8.0,0.125,0.25,104.93098750806246,NaN,66.16560115823559,NaN,26.314882889812022,216.1705414189554,32.57782724598632

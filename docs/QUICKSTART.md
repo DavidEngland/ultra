@@ -2,6 +2,15 @@
 
 This quickstart is focused on running [src/julia/DCT_SMEAR.jl](src/julia/DCT_SMEAR.jl) and the other main Julia entry scripts in this repository.
 
+Metadata references used by plotting and labeling code:
+
+- [data/smear/vars.json](data/smear/vars.json)
+- [data/sheba/vars.json](data/sheba/vars.json)
+- [docs/SHEBA_Variable_Catalog.md](docs/SHEBA_Variable_Catalog.md)
+- [docs/notes/MOST_BD_WeaklyStable_Fit.md](docs/notes/MOST_BD_WeaklyStable_Fit.md)
+- [src/julia/SMEARVarLookup.jl](src/julia/SMEARVarLookup.jl)
+- [src/julia/SHEBAVarLookup.jl](src/julia/SHEBAVarLookup.jl)
+
 ## 1) Requirements
 
 - Julia 1.9+
@@ -96,6 +105,11 @@ This preserves compatibility fields (`time`, `zeta`, `phi_obs`) and also carries
 many extra profile/flux variables (for example `z1..z5`, `ws1..ws5`, `T1..T5`,
 `q1..q5`, `rh1..rh5`, `u_1..u_5`, `hs1..hs5`, `hl`, radiation terms) when present.
 
+For variable descriptions and plot-label metadata for those SHEBA columns, use:
+
+- [data/sheba/vars.json](data/sheba/vars.json)
+- [docs/SHEBA_Variable_Catalog.md](docs/SHEBA_Variable_Catalog.md)
+
 SHEBA fit (Grachev baseline):
 
 ```bash
@@ -141,6 +155,26 @@ julia --project=. -e 'include("src/julia/DCT_SHEBA.jl")'
 ```
 
 `phi_obs` remains the backward-compatible default and is currently equal to `phi_m`.
+
+Generic MOST branch fitting for any preprocessed CSV with `zeta`, `phi_m`, `phi_h`, and optional `phi_q`:
+
+```bash
+julia --project=. src/julia/fit_most_profiles.jl \
+  runs/sheba/input/sheba_input_rich.csv \
+  runs/tmp/most_fit_sheba \
+  SHEBA_rich \
+  --tracers=momentum,heat,q
+```
+
+This writes:
+
+- `*_fit_params.csv`
+- `*_fit_predictions.csv`
+- `*_fit_regime_stats.csv`
+- `*_fit_curves.csv`
+- `*_report.md`
+
+The current fitter uses an unstable Businger-Dyer branch plus a weakly stable continuation with a matched neutral slope. The `Ri_{thick} = \lambda / b` relation, including the momentum case `4/b`, is documented in [docs/notes/MOST_BD_WeaklyStable_Fit.md](docs/notes/MOST_BD_WeaklyStable_Fit.md).
 
 Expected parity outputs include:
 
@@ -207,6 +241,17 @@ bash scripts/run_smear_varrio_station1_winter_matrix.sh 2020 2024 varrio_station
 
 - If you get SmartSMEAR 400 variable errors, verify tablevariable names in [data/smear/vars.json](data/smear/vars.json).
 - For Varrio-specific scripting, use [data/smear/varrio_dct_subset.json](data/smear/varrio_dct_subset.json) and [src/julia/SMEARVarLookup.jl](src/julia/SMEARVarLookup.jl) instead of hardcoding names.
+- For SHEBA labeling or future lookup work, prefer [data/sheba/vars.json](data/sheba/vars.json) over ad hoc hardcoded titles and refer to [docs/SHEBA_Variable_Catalog.md](docs/SHEBA_Variable_Catalog.md) for grouped-level and normalization rules.
+- Use [src/julia/SHEBAVarLookup.jl](src/julia/SHEBAVarLookup.jl) to resolve SHEBA labels, units, descriptions, source families, and grouped members in the same style that [src/julia/SMEARVarLookup.jl](src/julia/SMEARVarLookup.jl) supports SMEAR metadata.
+- Use [src/julia/fit_most_profiles.jl](src/julia/fit_most_profiles.jl) for preprocessed `phi_m` / `phi_h` / `phi_q` branch fits before moving to the stronger stable-only ultraspherical path.
+- To summarize existing DCT run outputs across years and collections, run:
+
+```bash
+julia --project=. src/julia/summarize_dct_reports.jl
+```
+
+This writes per-run CSV, yearly aggregate CSV, and Markdown summaries under `runs/summary/` by default.
+- Generated PNG plots under `runs/` are ignored by Git; CSV, Markdown, and other run artifacts remain visible unless ignored by another rule.
 - If dependencies drift, rerun:
 
 ```bash

@@ -1,0 +1,91 @@
+# DCT Run Summary
+
+- Runs root: /Users/davidengland/Documents/GitHub/ultra/runs
+- Generated: 2026-05-17T15:46:38.164
+- Runs summarized: 65
+
+## Collection-Year Summary
+
+- dct_smear_seasonal_dead_of_winter / unparsed: runs=4, total_profiles=192.0000, total_stable=28.0000, mean_stable_fraction=0.1458, mean_c3=0.0306, mean_shape_ratio=0.6400, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=0.0000
+- hyy_station2_ri_curvature_tier1/dct / 2020: runs=5, total_profiles=7148.0000, total_stable=1943.0000, mean_stable_fraction=0.2719, mean_c3=0.0337, mean_shape_ratio=0.5856, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- hyy_station2_ri_curvature_tier1/dct / 2021: runs=5, total_profiles=7197.0000, total_stable=1275.0000, mean_stable_fraction=0.1774, mean_c3=0.0040, mean_shape_ratio=0.5085, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- hyy_station2_ri_curvature_tier1/dct / 2022: runs=5, total_profiles=7129.0000, total_stable=1118.0000, mean_stable_fraction=0.1573, mean_c3=0.0193, mean_shape_ratio=0.5912, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- hyy_station2_ri_curvature_tier1/dct / 2023: runs=5, total_profiles=7024.0000, total_stable=848.0000, mean_stable_fraction=0.1214, mean_c3=-0.0182, mean_shape_ratio=0.4097, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- hyy_station2_ri_curvature_tier1/dct / 2024: runs=3, total_profiles=3976.0000, total_stable=467.0000, mean_stable_fraction=0.1161, mean_c3=0.0096, mean_shape_ratio=0.9960, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- root / unparsed: runs=2, total_profiles=96.0000, total_stable=0.0000, mean_stable_fraction=0.0000, mean_c3=0.0306, mean_shape_ratio=0.6400, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- sheba / unparsed: runs=4, total_profiles=192.0000, total_stable=104.0000, mean_stable_fraction=0.5417, mean_c3=194.6861, mean_shape_ratio=283.3767, mean_corr(c1,c3)=-0.0686, mean_rib_laminar_fraction=0.0263
+- tmp / unparsed: runs=2, total_profiles=1536.0000, total_stable=452.0000, mean_stable_fraction=0.4644, mean_c3=-0.9889, mean_shape_ratio=326.8723, mean_corr(c1,c3)=0.3253, mean_rib_laminar_fraction=0.0263
+- varrio/dct / 2020: runs=5, total_profiles=7194.0000, total_stable=516.0000, mean_stable_fraction=0.0718, mean_c3=-0.0154, mean_shape_ratio=1.4013, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- varrio/dct / 2021: runs=5, total_profiles=7109.0000, total_stable=846.0000, mean_stable_fraction=0.1183, mean_c3=-0.0072, mean_shape_ratio=1.2542, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- varrio/dct / 2022: runs=5, total_profiles=7247.0000, total_stable=568.0000, mean_stable_fraction=0.0781, mean_c3=-0.0121, mean_shape_ratio=0.8673, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- varrio/dct / 2023: runs=5, total_profiles=7248.0000, total_stable=830.0000, mean_stable_fraction=0.1140, mean_c3=-0.0008, mean_shape_ratio=1.2157, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- varrio/dct / 2024: runs=5, total_profiles=7246.0000, total_stable=597.0000, mean_stable_fraction=0.0826, mean_c3=-0.0018, mean_shape_ratio=2.4659, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+- varrio/dct / 2025: runs=5, total_profiles=5932.0000, total_stable=286.0000, mean_stable_fraction=0.0432, mean_c3=0.0041, mean_shape_ratio=1.0799, mean_corr(c1,c3)=NaN, mean_rib_laminar_fraction=NaN
+
+## Per-Run Snapshot
+
+- dct_smear_seasonal_dead_of_winter/varrio_dead_of_winter_dct_temperature_input: period=varrio_dead_of_winter_dct_temperature_input, observable=n/a, profiles=96.0000, stable_fraction=0.2917, mean_c3=0.0306, corr(c1,c3)=NaN, time_range=n/a
+- dct_smear_seasonal_dead_of_winter/varrio_dead_of_winter_humidity_profile: period=varrio_dead_of_winter_humidity_profile, observable=n/a, profiles=0.0000, stable_fraction=NaN, mean_c3=NaN, corr(c1,c3)=NaN, time_range=n/a
+- dct_smear_seasonal_dead_of_winter/varrio_dead_of_winter_temperature_profile: period=varrio_dead_of_winter_temperature_profile, observable=n/a, profiles=96.0000, stable_fraction=0.0000, mean_c3=0.0306, corr(c1,c3)=NaN, time_range=n/a
+- dct_smear_seasonal_dead_of_winter/varrio_dead_of_winter_wind_profile: period=varrio_dead_of_winter_wind_profile, observable=n/a, profiles=0.0000, stable_fraction=NaN, mean_c3=NaN, corr(c1,c3)=NaN, time_range=n/a
+- hyy_station2_ri_curvature_tier1/dct/2020_01: period=2020-01, observable=n/a, profiles=1488.0000, stable_fraction=0.2829, mean_c3=0.0472, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2020_02: period=2020-02, observable=n/a, profiles=1392.0000, stable_fraction=0.2471, mean_c3=0.0346, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2020_03: period=2020-03, observable=n/a, profiles=1488.0000, stable_fraction=0.2554, mean_c3=0.0588, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2020_11: period=2020-11, observable=n/a, profiles=1440.0000, stable_fraction=0.2854, mean_c3=0.0019, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2020_12: period=2020-12, observable=n/a, profiles=1340.0000, stable_fraction=0.2888, mean_c3=0.0258, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2021_01: period=2021-01, observable=n/a, profiles=1488.0000, stable_fraction=0.1109, mean_c3=0.0184, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2021_02: period=2021-02, observable=n/a, profiles=1344.0000, stable_fraction=0.1421, mean_c3=0.0017, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2021_03: period=2021-03, observable=n/a, profiles=1440.0000, stable_fraction=0.2514, mean_c3=0.0100, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2021_11: period=2021-11, observable=n/a, profiles=1440.0000, stable_fraction=0.2493, mean_c3=0.0001, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2021_12: period=2021-12, observable=n/a, profiles=1485.0000, stable_fraction=0.1333, mean_c3=-0.0100, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2022_01: period=2022-01, observable=n/a, profiles=1463.0000, stable_fraction=0.1545, mean_c3=0.0039, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2022_02: period=2022-02, observable=n/a, profiles=1344.0000, stable_fraction=0.2202, mean_c3=0.0143, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2022_03: period=2022-03, observable=n/a, profiles=1486.0000, stable_fraction=0.1467, mean_c3=0.0766, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2022_11: period=2022-11, observable=n/a, profiles=1383.0000, stable_fraction=0.1048, mean_c3=0.0115, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2022_12: period=2022-12, observable=n/a, profiles=1453.0000, stable_fraction=0.1604, mean_c3=-0.0097, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2023_01: period=2023-01, observable=n/a, profiles=1443.0000, stable_fraction=0.1033, mean_c3=0.0034, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2023_02: period=2023-02, observable=n/a, profiles=1344.0000, stable_fraction=0.1540, mean_c3=-0.0209, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2023_03: period=2023-03, observable=n/a, profiles=1488.0000, stable_fraction=0.1667, mean_c3=-0.0288, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2023_11: period=2023-11, observable=n/a, profiles=1261.0000, stable_fraction=0.1261, mean_c3=-0.0172, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2023_12: period=2023-12, observable=n/a, profiles=1488.0000, stable_fraction=0.0571, mean_c3=-0.0273, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2024_01: period=2024-01, observable=n/a, profiles=1233.0000, stable_fraction=0.0714, mean_c3=-0.0210, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2024_02: period=2024-02, observable=n/a, profiles=1389.0000, stable_fraction=0.1195, mean_c3=0.0021, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- hyy_station2_ri_curvature_tier1/dct/2024_03: period=2024-03, observable=n/a, profiles=1354.0000, stable_fraction=0.1573, mean_c3=0.0477, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- dct_smear_20250501_20250601: period=dct_smear_20250501_20250601, observable=n/a, profiles=0.0000, stable_fraction=NaN, mean_c3=NaN, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- dct_smear_varrio_dead_of_winter_2024_2025: period=dct_smear_varrio_dead_of_winter_2024_2025, observable=n/a, profiles=96.0000, stable_fraction=0.0000, mean_c3=0.0306, corr(c1,c3)=NaN, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- sheba/dct_main_file6: period=dct_main_file6, observable=n/a, profiles=48.0000, stable_fraction=0.5000, mean_c3=160.2244, corr(c1,c3)=NaN, time_range=n/a
+- sheba/dct_main_file6_rich: period=dct_main_file6_rich, observable=n/a, profiles=48.0000, stable_fraction=0.5000, mean_c3=-31.3780, corr(c1,c3)=NaN, time_range=n/a
+- sheba/dct_phi_h: period=dct_phi_h, observable=phi_h, profiles=48.0000, stable_fraction=0.6458, mean_c3=-2.0250, corr(c1,c3)=-0.0686, time_range=n/a
+- sheba/dct_phi_q: period=dct_phi_q, observable=phi_q, profiles=48.0000, stable_fraction=0.5208, mean_c3=651.9228, corr(c1,c3)=NaN, time_range=n/a
+- tmp/dct_sheba_lookup_check: period=dct_sheba_lookup_check, observable=phi_h, profiles=48.0000, stable_fraction=0.6458, mean_c3=-2.0250, corr(c1,c3)=-0.0686, time_range=1998-10-31T01:00:02.880 to 1999-09-25T16:59:57.120
+- tmp/dct_smear_shared_diag_check: period=dct_smear_shared_diag_check, observable=n/a, profiles=1488.0000, stable_fraction=0.2829, mean_c3=0.0472, corr(c1,c3)=0.7192, time_range=2025-05-01T00:00:00 to 2025-06-01T00:00:00
+- varrio/dct/2020_01: period=2020-01, observable=n/a, profiles=1488.0000, stable_fraction=0.0907, mean_c3=-0.0154, corr(c1,c3)=NaN, time_range=2020-01-01T00:00:00 to 2020-02-01T00:00:00
+- varrio/dct/2020_02: period=2020-02, observable=n/a, profiles=1328.0000, stable_fraction=0.0979, mean_c3=-0.0259, corr(c1,c3)=NaN, time_range=2020-02-01T00:00:00 to 2020-03-01T00:00:00
+- varrio/dct/2020_03: period=2020-03, observable=n/a, profiles=1455.0000, stable_fraction=0.0680, mean_c3=-0.0550, corr(c1,c3)=NaN, time_range=2020-03-01T00:00:00 to 2020-04-01T00:00:00
+- varrio/dct/2020_11: period=2020-11, observable=n/a, profiles=1435.0000, stable_fraction=0.0084, mean_c3=0.0029, corr(c1,c3)=NaN, time_range=2020-11-01T00:00:00 to 2020-12-01T00:00:00
+- varrio/dct/2020_12: period=2020-12, observable=n/a, profiles=1488.0000, stable_fraction=0.0941, mean_c3=0.0167, corr(c1,c3)=NaN, time_range=2020-12-01T00:00:00 to 2021-01-01T00:00:00
+- varrio/dct/2021_01: period=2021-01, observable=n/a, profiles=1488.0000, stable_fraction=0.1532, mean_c3=0.0208, corr(c1,c3)=NaN, time_range=2021-01-01T00:00:00 to 2021-02-01T00:00:00
+- varrio/dct/2021_02: period=2021-02, observable=n/a, profiles=1332.0000, stable_fraction=0.1194, mean_c3=0.0188, corr(c1,c3)=NaN, time_range=2021-02-01T00:00:00 to 2021-03-01T00:00:00
+- varrio/dct/2021_03: period=2021-03, observable=n/a, profiles=1363.0000, stable_fraction=0.0726, mean_c3=-0.0391, corr(c1,c3)=NaN, time_range=2021-03-01T00:00:00 to 2021-04-01T00:00:00
+- varrio/dct/2021_11: period=2021-11, observable=n/a, profiles=1438.0000, stable_fraction=0.1314, mean_c3=-0.0185, corr(c1,c3)=NaN, time_range=2021-11-01T00:00:00 to 2021-12-01T00:00:00
+- varrio/dct/2021_12: period=2021-12, observable=n/a, profiles=1488.0000, stable_fraction=0.1149, mean_c3=-0.0179, corr(c1,c3)=NaN, time_range=2021-12-01T00:00:00 to 2022-01-01T00:00:00
+- varrio/dct/2022_01: period=2022-01, observable=n/a, profiles=1488.0000, stable_fraction=0.1250, mean_c3=-0.0086, corr(c1,c3)=NaN, time_range=2022-01-01T00:00:00 to 2022-02-01T00:00:00
+- varrio/dct/2022_02: period=2022-02, observable=n/a, profiles=1344.0000, stable_fraction=0.0573, mean_c3=-0.0193, corr(c1,c3)=NaN, time_range=2022-02-01T00:00:00 to 2022-03-01T00:00:00
+- varrio/dct/2022_03: period=2022-03, observable=n/a, profiles=1488.0000, stable_fraction=0.0531, mean_c3=-0.0505, corr(c1,c3)=NaN, time_range=2022-03-01T00:00:00 to 2022-04-01T00:00:00
+- varrio/dct/2022_11: period=2022-11, observable=n/a, profiles=1440.0000, stable_fraction=0.0931, mean_c3=-0.0025, corr(c1,c3)=NaN, time_range=2022-11-01T00:00:00 to 2022-12-01T00:00:00
+- varrio/dct/2022_12: period=2022-12, observable=n/a, profiles=1487.0000, stable_fraction=0.0619, mean_c3=0.0207, corr(c1,c3)=NaN, time_range=2022-12-01T00:00:00 to 2023-01-01T00:00:00
+- varrio/dct/2023_01: period=2023-01, observable=n/a, profiles=1488.0000, stable_fraction=0.0302, mean_c3=0.0265, corr(c1,c3)=NaN, time_range=2023-01-01T00:00:00 to 2023-02-01T00:00:00
+- varrio/dct/2023_02: period=2023-02, observable=n/a, profiles=1344.0000, stable_fraction=0.0714, mean_c3=-0.0026, corr(c1,c3)=NaN, time_range=2023-02-01T00:00:00 to 2023-03-01T00:00:00
+- varrio/dct/2023_03: period=2023-03, observable=n/a, profiles=1488.0000, stable_fraction=0.1620, mean_c3=-0.0482, corr(c1,c3)=NaN, time_range=2023-03-01T00:00:00 to 2023-04-01T00:00:00
+- varrio/dct/2023_11: period=2023-11, observable=n/a, profiles=1440.0000, stable_fraction=0.1688, mean_c3=0.0002, corr(c1,c3)=NaN, time_range=2023-11-01T00:00:00 to 2023-12-01T00:00:00
+- varrio/dct/2023_12: period=2023-12, observable=n/a, profiles=1488.0000, stable_fraction=0.1378, mean_c3=0.0200, corr(c1,c3)=NaN, time_range=2023-12-01T00:00:00 to 2024-01-01T00:00:00
+- varrio/dct/2024_01: period=2024-01, observable=n/a, profiles=1439.0000, stable_fraction=0.1369, mean_c3=0.0285, corr(c1,c3)=NaN, time_range=2024-01-01T00:00:00 to 2024-02-01T00:00:00
+- varrio/dct/2024_02: period=2024-02, observable=n/a, profiles=1392.0000, stable_fraction=0.0920, mean_c3=0.0029, corr(c1,c3)=NaN, time_range=2024-02-01T00:00:00 to 2024-03-01T00:00:00
+- varrio/dct/2024_03: period=2024-03, observable=n/a, profiles=1488.0000, stable_fraction=0.0444, mean_c3=-0.0167, corr(c1,c3)=NaN, time_range=2024-03-01T00:00:00 to 2024-04-01T00:00:00
+- varrio/dct/2024_11: period=2024-11, observable=n/a, profiles=1439.0000, stable_fraction=0.0354, mean_c3=-0.0099, corr(c1,c3)=NaN, time_range=2024-11-01T00:00:00 to 2024-12-01T00:00:00
+- varrio/dct/2024_12: period=2024-12, observable=n/a, profiles=1488.0000, stable_fraction=0.1042, mean_c3=-0.0136, corr(c1,c3)=NaN, time_range=2024-12-01T00:00:00 to 2025-01-01T00:00:00
+- varrio/dct/2025_01: period=2025-01, observable=n/a, profiles=1488.0000, stable_fraction=0.1593, mean_c3=0.0034, corr(c1,c3)=NaN, time_range=2025-01-01T00:00:00 to 2025-02-01T00:00:00
+- varrio/dct/2025_02: period=2025-02, observable=n/a, profiles=1344.0000, stable_fraction=0.0335, mean_c3=0.0026, corr(c1,c3)=NaN, time_range=2025-02-01T00:00:00 to 2025-03-01T00:00:00
+- varrio/dct/2025_03: period=2025-03, observable=n/a, profiles=172.0000, stable_fraction=0.0233, mean_c3=-0.0004, corr(c1,c3)=NaN, time_range=2025-03-01T00:00:00 to 2025-04-01T00:00:00
+- varrio/dct/2025_11: period=2025-11, observable=n/a, profiles=1440.0000, stable_fraction=0.0000, mean_c3=0.0066, corr(c1,c3)=NaN, time_range=2025-11-01T00:00:00 to 2025-12-01T00:00:00
+- varrio/dct/2025_12: period=2025-12, observable=n/a, profiles=1488.0000, stable_fraction=0.0000, mean_c3=0.0082, corr(c1,c3)=NaN, time_range=2025-12-01T00:00:00 to 2026-01-01T00:00:00

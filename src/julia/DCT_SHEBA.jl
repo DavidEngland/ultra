@@ -9,6 +9,7 @@ using Dates
 include(joinpath(@__DIR__, "SmearPipeline.jl"))
 include(joinpath(@__DIR__, "compute_bulk_richardson.jl"))
 include(joinpath(@__DIR__, "C1C3Diagnostics.jl"))
+include(joinpath(@__DIR__, "SHEBAVarLookup.jl"))
 using .SmearPipeline
 using .C1C3Diagnostics
 
@@ -16,6 +17,11 @@ const REPO_ROOT = normpath(joinpath(@__DIR__, "..", ".."))
 const IN_CSV = get(ENV, "DCT_SHEBA_INPUT_CSV", joinpath(REPO_ROOT, "runs", "sheba", "input", "sheba_input.csv"))
 const OUT_DIR = get(ENV, "DCT_SHEBA_OUT_DIR", joinpath(REPO_ROOT, "runs", "sheba", "dct_main_file6"))
 const OBS_COL = Symbol(get(ENV, "DCT_SHEBA_OBS_COL", "phi_obs"))
+const OBS_NAME = String(OBS_COL)
+const OBS_LABEL = SHEBAVarLookup.sheba_plot_label(OBS_NAME)
+const OBS_LABEL_WITH_UNIT = SHEBAVarLookup.sheba_label_with_unit(OBS_NAME)
+const OBS_DESCRIPTION = SHEBAVarLookup.sheba_description(OBS_NAME)
+const OBS_SOURCE = SHEBAVarLookup.sheba_source_id(OBS_NAME)
 mkpath(OUT_DIR)
 
 const N_BINS = 48
@@ -324,6 +330,13 @@ function regime_stats(df::DataFrame)
 	return out
 end
 
+function data_timerange(df::DataFrame)
+	if :datetime in propertynames(df) && nrow(df) > 0
+		return minimum(df.datetime), maximum(df.datetime)
+	end
+	return nothing, nothing
+end
+
 df0 = CSV.read(IN_CSV, DataFrame; missingstring=["", "NaN", "NA", "9999", "999"])
 ensure_datetime!(df0)
 df = clean_input(df0)
@@ -372,7 +385,7 @@ diagnostics_summary = DataFrame(
 )
 
 interaction_df, rib_summary = maybe_write_rib(df0, fingerprints)
-c1_c3_summary = emit_c1_c3_diagnostics(OUT_DIR, fingerprints, "SHEBA $(OBS_COL)")
+c1_c3_summary = emit_c1_c3_diagnostics(OUT_DIR, fingerprints, "SHEBA $(OBS_LABEL)")
 
 diag_df = DataFrame(
 	metric=["n_rows", "n_bins", "n_modes_kept", "rmse_binned", "mae_binned", "variance_fraction_kept"],
@@ -393,15 +406,25 @@ CSV.write(joinpath(OUT_DIR, "diagnostics_summary.csv"), diagnostics_summary)
 
 default(size=(1100, 700), dpi=140)
 
+p_counts = bar(
+	string.(counts.stability),
+	counts.count;
+	xlabel="Stability class",
+	ylabel="Count",
+	title="DCT-SHEBA Stability Regime Counts ($(OBS_LABEL))",
+	legend=false,
+)
+savefig(p_counts, joinpath(OUT_DIR, "plot_stability_counts.png"))
+
 p_curve = scatter(
 	recon_df.zeta_mid,
 	recon_df.phi_med;
 	markersize=3,
 	alpha=0.75,
-	label="Binned median $(OBS_COL)",
+	label="Binned median $(OBS_LABEL)",
 	xlabel="zeta",
-	ylabel=String(OBS_COL),
-	title="SHEBA Two-Layer Stable Profile: $(OBS_COL) Binned Curve and DCT Reconstruction",
+	ylabel=OBS_LABEL_WITH_UNIT,
+	title="SHEBA Stable Profile: $(OBS_LABEL) Binned Curve and DCT Reconstruction",
 )
 plot!(p_curve, recon_df.zeta_mid, recon_df.phi_recon; linewidth=2.2, label="DCT reconstruction (first $(N_KEEP) modes)")
 savefig(p_curve, joinpath(OUT_DIR, "plot_sheba_dct_curve.png"))
@@ -415,6 +438,18 @@ p_coeff = bar(
 	title="SHEBA DCT Coefficient Magnitudes (first 20 modes)",
 )
 savefig(p_coeff, joinpath(OUT_DIR, "plot_sheba_dct_coeffs.png"))
+
+p_coeff_hist = histogram(
+	[fingerprints.c2 fingerprints.c3];
+	bins=50,
+	alpha=0.6,
+	normalize=:pdf,
+	label=["c2" "c3"],
+	xlabel="Coefficient value",
+	ylabel="Density",
+	title="SHEBA Spectral Coefficient Distributions ($(OBS_LABEL))",
+)
+savefig(p_coeff_hist, joinpath(OUT_DIR, "plot_coeff_distributions.png"))
 
 if !isempty(interaction_df) && all(c -> c in names(interaction_df), [:rib, :c3])
 	valid_rib = .!isnan.(_safe_float.(interaction_df.rib)) .& .!isnan.(_safe_float.(interaction_df.c3))
@@ -459,11 +494,20 @@ if all(c -> c in propertynames(df0), [:hs, :u_])
 end
 
 report_path = joinpath(OUT_DIR, "report.md")
+run_start, run_end = data_timerange(df0)
 open(report_path, "w") do io
 	write(io, "# SHEBA DCT Two-Layer Analysis\n\n")
 	write(io, "- Input: $(IN_CSV)\n")
 	write(io, "- Output dir: $(OUT_DIR)\n")
-	write(io, "- Observable: $(OBS_COL)\n")
+	write(io, "- Observable: $(OBS_NAME)\n")
+	write(io, "- Observable label: $(OBS_LABEL)\n")
+	write(io, "- Observable source family: $(OBS_SOURCE)\n")
+	if !isempty(OBS_DESCRIPTION)
+		write(io, "- Observable description: $(OBS_DESCRIPTION)\n")
+	end
+	if !isnothing(run_start) && !isnothing(run_end)
+		write(io, "- Time range: $(run_start) to $(run_end)\n")
+	end
 	write(io, "- Rows used: $(nrow(df))\n")
 	write(io, "- Quantile bins: $(nrow(profile))\n")
 	write(io, "- DCT modes kept: $(N_KEEP)\n")
@@ -475,7 +519,7 @@ open(report_path, "w") do io
 
 	write(io, "## Regime Summary\n\n")
 	for row in eachrow(reg_df)
-		write(io, "- $(row.regime): n=$(row.n), median(zeta)=$(row.zeta_median), median($(OBS_COL))=$(row.phi_median), mean($(OBS_COL))=$(row.phi_mean)\n")
+		write(io, "- $(row.regime): n=$(row.n), median(zeta)=$(row.zeta_median), median($(OBS_LABEL))=$(row.phi_median), mean($(OBS_LABEL))=$(row.phi_mean)\n")
 	end
 
 	if !isempty(c1_c3_summary)
@@ -492,11 +536,13 @@ open(report_path, "w") do io
 	write(io, "- stability_counts.csv\n")
 	write(io, "- diagnostics_summary.csv\n")
 	write(io, "- c1_c3_relationship_summary.csv\n")
+	write(io, "- plot_stability_counts.png\n")
 	write(io, "- sheba_binned_profile.csv\n")
 	write(io, "- sheba_dct_coeffs.csv\n")
 	write(io, "- sheba_dct_reconstruction.csv\n")
 	write(io, "- sheba_regime_stats.csv\n")
 	write(io, "- sheba_dct_diagnostics.csv\n")
+	write(io, "- plot_coeff_distributions.png\n")
 	write(io, "- plot_c3_c1_hist.png\n")
 	write(io, "- plot_phase_c1_c3.png\n")
 	write(io, "- plot_c1_c3_trend.png\n")
